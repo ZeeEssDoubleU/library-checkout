@@ -1,0 +1,26 @@
+{
+	"name": "server",
+	"version": "1.0.0",
+	"description": "server files for library_checkout",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"server": "nodemon server.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Zachary Williams <zak.williams2287@gmail.com>",
+	"license": "MIT",
+	"dependencies": {
+		"compression": "^1.7.4",
+		"cors": "^2.8.5",
+		"express": "^4.17.1",
+		"express-rate-limit": "^5.1.1",
+		"express-validator": "^6.4.0",
+		"helmet": "^3.22.0",
+		"knex": "^0.20.13",
+		"pg": "^7.18.2"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.2"
+	}
+}
