@@ -4,8 +4,11 @@ import { Route, Switch, withRouter } from "react-router-dom";
 import Nav from "./components/Nav";
 import Landing from "./components/Landing";
 import Login from "./components/Login.js";
-import Books from "./components/Books.js";
-import Users from "./components/Users.js";
+import Register from "./components/Register.js";
+import AllBooks from "./components/Books/AllBooks.js";
+import AvailableBooks from "./components/Books/AvailableBooks.js";
+import CheckedOutBooks from "./components/Books/CheckedOutBooks.js";
+import Users from "./components/Users/Users.js";
 
 function App() {
 	return (
@@ -18,8 +21,17 @@ function App() {
 				<Route exact path="/login">
 					<Login />
 				</Route>
-				<Route exact path="/books">
-					<Books />
+				<Route exact path="/register">
+					<Register />
+				</Route>
+				<Route exact path="/books/all">
+					<AllBooks />
+				</Route>
+				<Route exact path="/books/available">
+					<AvailableBooks />
+				</Route>
+				<Route exact path="/books/checked-out">
+					<CheckedOutBooks />
 				</Route>
 				<Route exact path="/users">
 					<Users />

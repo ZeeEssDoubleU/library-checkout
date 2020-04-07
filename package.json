@@ -8,10 +8,13 @@
 		"i-server": "npm install --prefix server",
 		"install-client": "npm install --prefix client",
 		"i-client": "npm install --prefix client",
+		"update-client": "npm update --prefix client",
+
 		"server-start": "npm start --prefix server",
 		"server-run": "npm run server --prefix server",
 		"client": "npm start --prefix client",
 		"dev": "concurrently 'npm run server-run' 'npm run client'",
+
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Zachary Williams <zak.williams2287@gmail.com>",

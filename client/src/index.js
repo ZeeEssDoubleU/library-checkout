@@ -4,14 +4,23 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+
+import { ThemeProvider } from "styled-components";
+import { theme } from "./styles/theme";
 // import bootstrap to style reactstrap components
 import "bootstrap/dist/css/bootstrap.min.css";
+// import store
+import { StoreProvider } from "./store/useStore";
 
 ReactDOM.render(
 	<React.StrictMode>
-		<BrowserRouter>
-			<App />
-		</BrowserRouter>
+		<ThemeProvider theme={theme}>
+			<StoreProvider>
+				<BrowserRouter>
+					<App />
+				</BrowserRouter>
+			</StoreProvider>
+		</ThemeProvider>
 	</React.StrictMode>,
 	document.getElementById("root"),
 );
