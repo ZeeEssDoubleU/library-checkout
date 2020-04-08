@@ -12,16 +12,25 @@ import {
 	Button,
 	Col,
 } from "reactstrap";
+// import util
+import isEmpty from "../../utils/isEmpty";
 
 const Book = (props) => {
-	const userFullName = `${props.userFirstName} ${props.userLastName}`;
+	// check for first or last name and combine into full name.  Trim extra whitespace, if any
+	const userFullName =
+		(props.userFirstName || props.userLastName) &&
+		`${props.userFirstName} ${props.userLastName}`.trim();
 	return (
 		<Card body outline>
 			<CardTitle>{props.title}</CardTitle>
 			<CardSubtitle>{props.author}</CardSubtitle>
-			<CardText>{userFullName}</CardText>
-			<CardText>{props.dateCheckedOut}</CardText>
-			<CardText>{props.dateOverdue}</CardText>
+			{!isEmpty(userFullName) && <CardText>{userFullName}</CardText>}
+			{!isEmpty(props.dateCheckedOut) && (
+				<CardText>{props.dateCheckedOut}</CardText>
+			)}
+			{!isEmpty(props.dateOverdue) && (
+				<CardText>{props.dateOverdue}</CardText>
+			)}
 		</Card>
 	);
 };
