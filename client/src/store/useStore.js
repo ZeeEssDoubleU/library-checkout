@@ -10,6 +10,10 @@ const reducer = (state, action) => {
 	switch (action.type) {
 		case bookActions.types.GET_BOOKS_ALL:
 			return { ...state, books_all: action.payload };
+		case bookActions.types.GET_BOOKS_AVAILABLE:
+			return { ...state, books_available: action.payload };
+		case bookActions.types.GET_BOOKS_CHECKED_OUT:
+			return { ...state, books_checked_out: action.payload };
 		case userActions.types.GET_USERS:
 			return { ...state, users: action.payload };
 		default:

@@ -5,6 +5,7 @@ export const types = {
 	GET_USER: "GET_USER",
 };
 
+// get all users
 export const getUsers = async (dispatch) => {
 	try {
 		const response = await axios({

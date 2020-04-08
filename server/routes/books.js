@@ -3,14 +3,57 @@ const router = express.Router();
 const { pool } = require("../config");
 const { validationResult } = require("express-validator");
 
-const books = `SELECT book.id, book.title, author.name AS author FROM book JOIN author ON author.id = book.author_id`;
+const books = `
+	SELECT 
+		book.id, book.title, 
+		author.name AS author 
+	FROM book 
+	JOIN author ON author.id = book.author_id`;
+const books_checked_out = `
+	SELECT 
+		book.id, book.title, 
+		author.name AS author, 
+		public.user.first_name AS user_first_name, public.user.last_name AS user_last_name, 
+		checkouts.date_checkout, checkouts.date_overdue 
+	FROM book
+	JOIN author ON author.id = book.author_id
+	JOIN checkouts ON checkouts.book_id = book.id
+	JOIN public.user ON checkouts.user_id = public.user.id`;
 
 // @route - GET /books
 // @desc - get all books
 // @access - public
 router.get("/", async (request, response) => {
 	try {
-		const result = await pool.query(`${books} ORDER BY id ASC`);
+		const result = await pool.query(`${books} ORDER BY book.title ASC`);
+		response.status(200).json(result.rows);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+// @route - GET /books/available
+// @desc - get all available books
+// @access - public
+router.get("/available", async (request, response) => {
+	try {
+		const result = await pool.query(
+			`${books} WHERE book.quantity_available > 0 ORDER BY book.title ASC`,
+		);
+		response.status(200).json(result.rows);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+// @route - GET /books/checked-out
+// @desc - get all checked out books
+// @access - public
+router.get("/checked-out", async (request, response) => {
+	try {
+		const result = await pool.query(
+			`${books_checked_out} ORDER BY book.title ASC`,
+		);
 		response.status(200).json(result.rows);
 	} catch (error) {
 		console.error(error);

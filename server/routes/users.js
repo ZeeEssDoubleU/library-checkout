@@ -3,12 +3,14 @@ const router = express.Router();
 const { pool } = require("../config");
 const { validationResult } = require("express-validator");
 
+const users = `SELECT * FROM public.user`;
+
 // @route - GET /users
 // @desc - get all users
 // @access - public
 router.get("/", async (request, response) => {
 	try {
-		const result = await pool.query("SELECT * FROM user ORDER BY id ASC");
+		const result = await pool.query(`${users} ORDER BY last_name ASC`);
 		response.status(200).json(result.rows);
 	} catch (error) {
 		console.error(error);

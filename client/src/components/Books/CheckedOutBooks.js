@@ -1,18 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import styled from "styled-components";
 // import components
 import Book from "./Book";
+// import store, actions
+import { useStore } from "../../store/useStore.js";
+import { getCheckedOutBooks } from "../../store/actions/books";
 
+const AllBooks = (props) => {
+	const { state, dispatch } = useStore();
 
-const CheckedOutBooks = (props) => {
-	return <Grid></Grid>;
+	useEffect(() => {
+		getCheckedOutBooks(dispatch);
+	}, []);
+
+	const displayBooks =
+		state.books_checked_out &&
+		state.books_checked_out.map((book) => (
+			<Book
+				key={book.id}
+				title={book.title}
+				author={book.author}
+				userFirstName={book.user_first_name}
+				userLastName={book.user_last_name}
+				dateCheckedOut={book.date_checkout}
+				dateOverdue={book.date_overdue}
+			/>
+		));
+
+	return <Grid>{displayBooks}</Grid>;
 };
 
-CheckedOutBooks.propTypes = {};
+AllBooks.propTypes = {};
 
-export default CheckedOutBooks;
+export default AllBooks;
 
 const Grid = styled.div`
 	display: grid;

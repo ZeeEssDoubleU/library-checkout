@@ -1,17 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import styled from "styled-components";
 // import components
 import Book from "./Book";
+// import store, actions
+import { useStore } from "../../store/useStore.js";
+import { getAvailableBooks } from "../../store/actions/books";
 
-const AvailableBooks = (props) => {
-	return <Grid></Grid>;
+const AllBooks = (props) => {
+	const { state, dispatch } = useStore();
+
+	useEffect(() => {
+		getAvailableBooks(dispatch);
+	}, []);
+
+	const displayBooks =
+		state.books_available &&
+		state.books_available.map((book) => (
+			<Book key={book.id} title={book.title} author={book.author} />
+		));
+
+	return <Grid>{displayBooks}</Grid>;
 };
 
-AvailableBooks.propTypes = {};
+AllBooks.propTypes = {};
 
-export default AvailableBooks;
+export default AllBooks;
 
 const Grid = styled.div`
 	display: grid;
