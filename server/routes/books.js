@@ -20,7 +20,7 @@ const books_checked_out = `
 	JOIN checkouts ON checkouts.book_id = book.id
 	JOIN public.user ON checkouts.user_id = public.user.id`;
 
-// @route - GET /books
+// @route - GET api/books
 // @desc - get all books
 // @access - public
 router.get("/", async (request, response) => {
@@ -32,7 +32,7 @@ router.get("/", async (request, response) => {
 	}
 });
 
-// @route - GET /books/available
+// @route - GET api/books/available
 // @desc - get all available books
 // @access - public
 router.get("/available", async (request, response) => {
@@ -46,7 +46,7 @@ router.get("/available", async (request, response) => {
 	}
 });
 
-// @route - GET /books/checked-out
+// @route - GET api/books/checked-out
 // @desc - get all checked out books
 // @access - public
 router.get("/checked-out", async (request, response) => {
@@ -60,7 +60,7 @@ router.get("/checked-out", async (request, response) => {
 	}
 });
 
-// @route - GET /books/:id
+// @route - GET api/books/:id
 // @desc - get book by id
 // @access - public
 router.get("/:id", async (request, response) => {
@@ -74,7 +74,7 @@ router.get("/:id", async (request, response) => {
 	}
 });
 
-// @route - POST /books
+// @route - POST api/books
 // @desc - create new book
 // @access - public
 router.post("/", async (request, response) => {
@@ -91,7 +91,7 @@ router.post("/", async (request, response) => {
 	}
 });
 
-// @route - PUT /books/:id
+// @route - PUT api/books/:id
 // @desc - update book by id
 // @access - public
 router.put("/:id", async (request, response) => {
@@ -109,7 +109,7 @@ router.put("/:id", async (request, response) => {
 	}
 });
 
-// @route - DELETE /books/:id
+// @route - DELETE api/books/:id
 // @desc - delete book by id
 // @access - public
 router.delete("/:id", async (request, response) => {

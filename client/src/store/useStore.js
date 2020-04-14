@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { createContext, useReducer, useContext } from "react";
+import React, { createContext, useReducer, useContext, useEffect } from "react";
 import axios from "axios";
 // import action types
 import * as bookActions from "./actions/books";
@@ -35,11 +35,16 @@ const initState =
 		: {}; // fallback to {} so that sub states don't return null
 
 // context that stores and shares data
-const StoreContext = createContext(initState);
+const StoreContext = createContext();
 
 // component to wrap upper level root component with Provider
 export const StoreProvider = ({ children }) => {
-	const [state, dispatch] = useReducer(reducer, initState);
+	const sessionState = JSON.parse(sessionStorage.getItem("sessionState"));
+	const [state, dispatch] = useReducer(reducer, sessionState || initState);
+
+	useEffect(() => {
+		sessionStorage.setItem("sessionState", JSON.stringify(state));
+	}, [state]);
 
 	return (
 		<StoreContext.Provider value={{ state, dispatch }}>

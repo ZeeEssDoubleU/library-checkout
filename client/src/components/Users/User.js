@@ -4,9 +4,10 @@ import styled from "styled-components";
 // import components
 import {
 	Card,
+	CardHeader,
 	CardTitle,
 	CardSubtitle,
-	CardDeck,
+	CardBody,
 	Button,
 	Col,
 } from "reactstrap";
@@ -14,9 +15,16 @@ import {
 const User = (props) => {
 	const fullName = `${props.firstName} ${props.lastName}`;
 	return (
-		<Card body outline>
-			<CardTitle>{fullName} </CardTitle>
-			<CardSubtitle>{props.email}</CardSubtitle>
+		<Card outline>
+			<CardHeader>
+				<CardTitle>{fullName} </CardTitle>
+			</CardHeader>
+			<CardBody>
+				<CardSubtitle>
+					Email: <br />
+					{props.email}
+				</CardSubtitle>
+			</CardBody>
 		</Card>
 	);
 };

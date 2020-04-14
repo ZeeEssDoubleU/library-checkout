@@ -12,27 +12,24 @@ import {
 	Label,
 } from "reactstrap";
 
-const Register = (props) => {
+const Login = (props) => {
 	return (
 		<Container fluid>
 			<LoginCard>
 				<Form>
 					<FormGroup>
-						<StyledLabel for="email">Email</StyledLabel>
+						<Label for="email">Email</Label>
 						<Input type="email" id="email" />
 					</FormGroup>
 					<FormGroup>
-						<StyledLabel for="password">Password</StyledLabel>
+						<Label for="password">Password</Label>
 						<Input type="password" id="password" />
 					</FormGroup>
 					<FormGroup>
-						<StyledLabel for="confirm-password">
-							Confirm Password
-						</StyledLabel>
-						<Input type="password" id="confirm-password" />
-					</FormGroup>
-					<FormGroup>
-						<StyledButton>Submit</StyledButton>
+						<StyledButton color="success">Login</StyledButton>
+						<StyledButton color="primary" href="/register">
+							Register
+						</StyledButton>
 					</FormGroup>
 				</Form>
 			</LoginCard>
@@ -40,9 +37,9 @@ const Register = (props) => {
 	);
 };
 
-Register.propTypes = {};
+Login.propTypes = {};
 
-export default Register;
+export default Login;
 
 const LoginCard = styled(Card)`
 	margin: 2rem;
@@ -50,7 +47,6 @@ const LoginCard = styled(Card)`
 const FormGroup = styled.div`
 	margin: 1em;
 `;
-const StyledLabel = styled(Label)``;
 const Grid = styled.div`
 	display: flex;
 	justify-content: center;

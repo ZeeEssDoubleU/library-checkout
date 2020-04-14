@@ -1,6 +1,5 @@
 import React from "react";
-import styled from "styled-components";
-import { Navbar, NavbarBrand, Nav, NavItem, Button, NavLink } from "reactstrap";
+import { Navbar, NavbarBrand, Nav, NavItem, NavLink } from "reactstrap";
 
 const Navigation = (props) => {
 	return (

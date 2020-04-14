@@ -18,9 +18,12 @@
 		"express-validator": "^6.4.0",
 		"helmet": "^3.22.0",
 		"knex": "^0.20.13",
-		"pg": "^7.18.2"
+		"lodash": "^4.17.15",
+		"passport": "^0.4.1",
+		"pg": "^7.18.2",
+		"validator": "^13.0.0"
 	},
 	"devDependencies": {
-		"nodemon": "^2.0.2"
+		"nodemon": "^2.0.3"
 	}
 }
