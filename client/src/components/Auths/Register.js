@@ -1,91 +1,122 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
 // import components
-import {
-	Container,
-	Card,
-	Form,
-	Input,
-	Button,
-	ButtonGroup,
-	Label,
-} from "reactstrap";
-// import action
+import { Container, Card, Form, Input, Button, Label } from "reactstrap";
+import FormGroup from "./FormGroup";
+// import validation
+import validateRegister from "../../validate/register";
+// import actions/store
+import { useStore } from "../../store/useStore.js";
 import { registerUser } from "../../store/actions/users";
+import { clearErrors, logErrors } from "../../store/actions/errors";
 
 const Register = (props) => {
+	const { dispatch } = useStore();
 	const history = useHistory();
-	const [newUser, setNewUser] = useState({
-		first_name: null,
-		last_name: null,
-		email: null,
-		password: null,
-		password_confirm: null,
+	const [formData, setFormData] = useState({
+		first_name: "",
+		last_name: "",
+		email: "",
+		password: "",
+		password_confirm: "",
+		submitted: false,
+		errors: {},
 	});
 
+	// update formData state input change
 	const onChange = (event) => {
-		setNewUser({
-			...newUser,
+		// collect new updated formData as newUser
+		const newUser = {
+			...formData,
 			[event.target.name]: event.target.value,
+		};
+		// validate formData and log errors when formData changes
+		const { errors, isValid } = validateRegister(newUser);
+		setFormData({
+			...newUser,
+			errors,
 		});
 	};
 
-	const onSubmit = (event) => {
+	// register formData on form submit
+	const onSubmit = async (event) => {
 		event.preventDefault();
-		registerUser(newUser, history);
+		// register user and await reponse if errors
+		const response = await registerUser(formData, history, dispatch);
+		setFormData({
+			...formData,
+			submitted: true,
+			errors: response,
+		});
 	};
 
 	return (
 		<Container fluid>
-			<LoginCard>
-				<Form onSubmit={onSubmit} method="POST">
-					<FormGroup>
-						<StyledLabel for="first_name">First Name</StyledLabel>
-						<Input
-							type="first_name"
-							name="first_name"
-							onChange={onChange}
-						/>
-					</FormGroup>
-					<FormGroup>
-						<StyledLabel for="last_name">Last Name</StyledLabel>
-						<Input
-							type="last_name"
-							name="last_name"
-							onChange={onChange}
-						/>
-					</FormGroup>
-					<FormGroup>
-						<StyledLabel for="email">Email</StyledLabel>
-						<Input type="email" name="email" onChange={onChange} />
-					</FormGroup>
-					<FormGroup>
-						<StyledLabel for="password">Password</StyledLabel>
-						<Input type="password" name="password" onChange={onChange} />
-					</FormGroup>
-					<FormGroup>
-						<StyledLabel for="password_confirm">
-							Confirm Password
-						</StyledLabel>
-						<Input
-							type="password"
-							name="password_confirm"
-							onChange={onChange}
-						/>
-					</FormGroup>
-					<FormGroup>
+			<StyledCard>
+				<Form onSubmit={onSubmit} noValidate>
+					<FormGroup
+						required
+						name="first_name"
+						type="text"
+						label="First Name"
+						value={formData?.first_name}
+						onChange={onChange}
+						error={formData.errors?.first_name}
+						submitted={formData.submitted}
+					/>
+					<FormGroup
+						required
+						name="last_name"
+						type="text"
+						label="Last Name"
+						value={formData?.last_name}
+						onChange={onChange}
+						error={formData.errors?.last_name}
+						submitted={formData.submitted}
+					/>
+					<FormGroup
+						required
+						name="email"
+						type="email"
+						label="Email"
+						value={formData?.email}
+						onChange={onChange}
+						error={formData.errors?.email}
+						submitted={formData.submitted}
+					/>
+					<FormGroup
+						required
+						name="password"
+						type="password"
+						label="Password"
+						value={formData?.password}
+						onChange={onChange}
+						error={formData.errors?.password}
+						submitted={formData.submitted}
+					/>
+					<FormGroup
+						required
+						name="password_confirm"
+						type="password"
+						label="Confirm Password"
+						value={formData?.password_confirm}
+						onChange={onChange}
+						error={formData.errors?.password_confirm}
+						submitted={formData.submitted}
+					/>
+					<ButtonGroup>
 						<StyledButton color="success" type="submit">
 							Submit
 						</StyledButton>
 						<StyledButton color="danger" onClick={() => history.goBack()}>
 							Cancel
 						</StyledButton>
-					</FormGroup>
+					</ButtonGroup>
 				</Form>
-			</LoginCard>
+			</StyledCard>
 		</Container>
 	);
 };
@@ -94,16 +125,11 @@ Register.propTypes = {};
 
 export default Register;
 
-const LoginCard = styled(Card)`
+const StyledCard = styled(Card)`
 	margin: 2rem;
 `;
-const FormGroup = styled.div`
+const ButtonGroup = styled.div`
 	margin: 1em;
-`;
-const StyledLabel = styled(Label)``;
-const Grid = styled.div`
-	display: flex;
-	justify-content: center;
 `;
 const StyledButton = styled(Button)`
 	margin-right: 1em;

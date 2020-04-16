@@ -4,16 +4,11 @@ const isEmpty = require("lodash/fp/isEmpty");
 const validateRegister = (data) => {
 	let errors = {};
 
-	// make sure that data fields are strings for Validator
-	const checkString = (input) => {
-		return !isEmpty(input) ? input : "";
-	};
-
-	const first_name = checkString(data.first_name);
-	const last_name = checkString(data.last_name);
-	const email = checkString(data.email);
-	const password = checkString(data.password);
-	const password_confirm = checkString(data.password_confirm);
+	const first_name = data.first_name;
+	const last_name = data.last_name;
+	const email = data.email;
+	const password = data.password;
+	const password_confirm = data.password_confirm;
 
 	// first_name
 	if (isEmpty(first_name)) {
@@ -47,7 +42,7 @@ const validateRegister = (data) => {
 	if (isEmpty(password_confirm)) {
 		errors.password_confirm = "Password confirmation is required.";
 	} else if (!equals(password, password_confirm)) {
-		errors.password_confirm = "Password confirmation must match password.";
+		errors.password_confirm = "Passwords must match.";
 	}
 
 	return {

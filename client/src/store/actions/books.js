@@ -1,4 +1,6 @@
 import axios from "axios";
+// import actions
+import { logErrors } from "./errors";
 
 export const types = {
 	GET_BOOKS_ALL: "GET_BOOKS_ALL",
@@ -20,7 +22,7 @@ export const getBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		console.error(error);
+		logErrors(error.response.data, dispatch);
 	}
 };
 
@@ -37,7 +39,7 @@ export const getAvailableBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		console.error(error);
+		logErrors(error.response.data, dispatch);
 	}
 };
 
@@ -54,6 +56,6 @@ export const getCheckedOutBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		console.error(error);
+		logErrors(error.response.data, dispatch);
 	}
 };

@@ -1,9 +1,9 @@
 // @ts-nocheck
 import React, { createContext, useReducer, useContext, useEffect } from "react";
-import axios from "axios";
 // import action types
 import * as bookActions from "./actions/books";
 import * as userActions from "./actions/users";
+import * as errorActions from "./actions/errors";
 
 // reducer
 const reducer = (state, action) => {
@@ -16,6 +16,14 @@ const reducer = (state, action) => {
 			return { ...state, books_checked_out: action.payload };
 		case userActions.types.GET_USERS:
 			return { ...state, users: action.payload };
+		case userActions.types.GET_USER:
+			return { ...state, user: action.payload };
+		case userActions.types.LOGIN_USER:
+			return { ...state, user_login: action.payload };
+		case errorActions.types.LOG_ERRORS:
+			return { ...state, errors: action.payload };
+		case errorActions.types.CLEAR_ERRORS:
+			return { ...state, errors: action.payload };
 		default:
 			return state;
 	}
@@ -31,6 +39,8 @@ const initState =
 				book: null,
 				users: null,
 				user: null,
+				user_login: null,
+				errors: null,
 		  }
 		: {}; // fallback to {} so that sub states don't return null
 
@@ -53,7 +63,7 @@ export const StoreProvider = ({ children }) => {
 	);
 };
 
-// useStore hook.  Acts as Consumer through useContext
+// { useStore } hook.  Acts as Consumer through useContext
 export const useStore = () => {
 	const { state, dispatch } = useContext(StoreContext);
 	return { state, dispatch };

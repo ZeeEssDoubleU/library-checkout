@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { pool } = require("../config");
-const { validationResult } = require("express-validator");
 
 const books = `
 	SELECT 

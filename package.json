@@ -7,16 +7,16 @@
 		"install-server": "npm install --prefix server",
 		"i-server": "npm install --prefix server",
 		"update-server": "npm update --prefix server",
-
 		"install-client": "npm install --prefix client",
 		"i-client": "npm install --prefix client",
 		"update-client": "npm update --prefix client",
-
-		"server-start": "npm start --prefix server",
+		"install-all": "npm i && npm run i-server && npm run i-client",
+		"i-all": "npm i && npm run i-server && npm run i-client",
+		"update-all": "npm update && npm run update-server && npm run update-client",
 		"server-run": "npm run server --prefix server",
+		"server-start": "npm start --prefix server",
 		"client": "npm start --prefix client",
 		"dev": "concurrently 'npm run server-run' 'npm run client'",
-		
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Zachary Williams <zak.williams2287@gmail.com>",

@@ -1,8 +1,12 @@
 import axios from "axios";
+// import actions
+import { logErrors } from "./errors";
 
 export const types = {
 	GET_USERS: "GET_USERS",
 	GET_USER: "GET_USER",
+	REGISTER_USER: "REGISTER_USER",
+	LOGIN_USER: "LOGIN_USER",
 };
 
 // get all users
@@ -14,16 +18,28 @@ export const getUsers = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		console.error(error);
+		logErrors(error.response.data, dispatch);
 	}
 };
 
-// register user
 export const registerUser = async (userData, history) => {
 	try {
 		const response = await axios.post("/api/users/register", userData);
-		console.log("New user:", response.data);
+		history.push("/login");
 	} catch (error) {
-		console.error(error);
+		return error.response.data;
+	}
+};
+
+export const loginUser = async (userData, history, dispatch) => {
+	try {
+		const response = await axios.post("/api/users/login", userData);
+		dispatch({
+			type: types.LOGIN_USER,
+			payload: response.data,
+		});
+		history.push("/books/checked-out");
+	} catch (error) {
+		logErrors(error.response.data, dispatch);
 	}
 };

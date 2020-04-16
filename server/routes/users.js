@@ -1,13 +1,17 @@
 const express = require(`express`);
 const router = express.Router();
 const { pool } = require(`../config`);
+const bcrypt = require("bcrypt");
+const capitalize = require("lodash/fp/capitalize");
 // import validations
-const validateRegister = require(`../validate/register`);
+const validateRegister = require(`../../client/src/validate/register`);
 
-const findUser = async (input_type, input) => {
+const findUser = async (input) => {
+	const key = Object.keys(input)[0];
+
 	const result = await pool.query(
-		`SELECT * FROM public.user WHERE ${input_type} = $1`,
-		[input],
+		`SELECT * FROM public.user WHERE ${key} = $1`,
+		[input[key]],
 	);
 	return result.rows[0];
 };
@@ -55,32 +59,95 @@ router.post(`/register`, async (request, response) => {
 		return response.status(422).json(errors);
 	}
 
-	const {
-		first_name,
-		last_name,
-		email,
-		password,
-		password_confirm,
-	} = request.body;
-
 	try {
+		const { first_name, last_name, email, password } = request.body;
 		// find user
-		const user = await findUser("email", email);
+		const user = await findUser({ email });
 
 		// if user already registered, send error
 		if (user) {
-			errors.email = `${user.email} is already registered.`;
+			errors.email = `Email is already registered.`;
 			response.status(422).json(errors);
 		} else {
-			// create user
-			const result = await pool.query(
-				`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
-				[first_name, last_name, email, password],
-			);
+			// create new user object (so password can be hashed)
+			const newUser = { first_name, last_name, email, password };
 
-			// TODO: add password encryption
+			// hash (encrypt password)
+			bcrypt.hash(newUser.password, 12, async (err, hash) => {
+				if (err) throw err;
+				// hash password
+				newUser.password = await hash;
 
-			response.status(201).json(result.rows[0]);
+				// create new user in database
+				const result = await pool.query(
+					`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
+					[
+						capitalize(newUser.first_name),
+						capitalize(newUser.last_name),
+						newUser.email,
+						newUser.password,
+					],
+				);
+
+				response.status(201).json(result.rows[0]);
+			});
+		}
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+// @route - POST api/users/login
+// @desc - login user
+// @access - public
+router.post(`/login`, async (request, response) => {
+	// // validate request
+	// const { errors, isValid } = validateLogin(request.body);
+
+	// // if request not valid, return errors
+	// if (!isValid) {
+	// 	return response.status(422).json(errors);
+	// }
+
+	try {
+		const { email, password } = request.body;
+		// find user
+		const user = await findUser({ email });
+
+		// if no email (user) found, send error
+		if (!user) {
+			errors.email = `Email (user) not found.`;
+			response.status(422).json(errors);
+		} else {
+			// compare passwords
+			const match = await bcrypt.compare(password, user.password);
+			if (match) {
+				console.log("MATCH MATCH MATCH");
+			} else {
+				console.log("WROOOONNNNNNNNGGGG!!!");
+			}
+
+			// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES
+			// TODO: MAYBE ADD LOGGED IN USER TO STORE STATE
+			// // hash (encrypt password)
+			// bcrypt.hash(newUser.password, 12, async (err, hash) => {
+			// 	if (err) throw err;
+			// 	// hash password
+			// 	newUser.password = await hash;
+
+			// 	// create new user in database
+			// 	const result = await pool.query(
+			// 		`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
+			// 		[
+			// 			newUser.first_name,
+			// 			newUser.last_name,
+			// 			newUser.email,
+			// 			newUser.password,
+			// 		],
+			// 	);
+
+			// 	response.status(201).json(result.rows[0]);
+			// });
 		}
 	} catch (error) {
 		console.error(error);
