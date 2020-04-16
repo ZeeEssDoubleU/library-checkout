@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const capitalize = require("lodash/fp/capitalize");
 // import validations
 const validateRegister = require(`../../client/src/validate/register`);
+const validateLogin = require(`../../client/src/validate/login`);
 
 const findUser = async (input) => {
 	const key = Object.keys(input)[0];
@@ -101,13 +102,13 @@ router.post(`/register`, async (request, response) => {
 // @desc - login user
 // @access - public
 router.post(`/login`, async (request, response) => {
-	// // validate request
-	// const { errors, isValid } = validateLogin(request.body);
+	// validate request
+	const { errors, isValid } = validateLogin(request.body);
 
-	// // if request not valid, return errors
-	// if (!isValid) {
-	// 	return response.status(422).json(errors);
-	// }
+	// if request not valid, return errors
+	if (!isValid) {
+		return response.status(422).json(errors);
+	}
 
 	try {
 		const { email, password } = request.body;
@@ -117,14 +118,15 @@ router.post(`/login`, async (request, response) => {
 		// if no email (user) found, send error
 		if (!user) {
 			errors.email = `Email (user) not found.`;
-			response.status(422).json(errors);
+			response.status(404).json(errors);
 		} else {
 			// compare passwords
 			const match = await bcrypt.compare(password, user.password);
 			if (match) {
 				console.log("MATCH MATCH MATCH");
 			} else {
-				console.log("WROOOONNNNNNNNGGGG!!!");
+				errors.password = `Password is incorrect.`;
+				response.status(401).json(errors);
 			}
 
 			// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES

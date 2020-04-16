@@ -40,6 +40,6 @@ export const loginUser = async (userData, history, dispatch) => {
 		});
 		history.push("/books/checked-out");
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		return error.response.data;
 	}
 };

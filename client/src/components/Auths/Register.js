@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
-import axios from "axios";
 // import components
-import { Container, Card, Form, Input, Button, Label } from "reactstrap";
+import { Container, Card, Form, Button } from "reactstrap";
 import FormGroup from "./FormGroup";
 // import validation
 import validateRegister from "../../validate/register";
 // import actions/store
-import { useStore } from "../../store/useStore.js";
 import { registerUser } from "../../store/actions/users";
-import { clearErrors, logErrors } from "../../store/actions/errors";
 
 const Register = (props) => {
-	const { dispatch } = useStore();
 	const history = useHistory();
 	const [formData, setFormData] = useState({
 		first_name: "",
@@ -34,7 +30,7 @@ const Register = (props) => {
 			[event.target.name]: event.target.value,
 		};
 		// validate formData and log errors when formData changes
-		const { errors, isValid } = validateRegister(newUser);
+		const { errors } = validateRegister(newUser);
 		setFormData({
 			...newUser,
 			errors,
@@ -45,7 +41,7 @@ const Register = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await registerUser(formData, history, dispatch);
+		const response = await registerUser(formData, history);
 		setFormData({
 			...formData,
 			submitted: true,
@@ -62,7 +58,7 @@ const Register = (props) => {
 						name="first_name"
 						type="text"
 						label="First Name"
-						value={formData?.first_name}
+						value={formData.first_name}
 						onChange={onChange}
 						error={formData.errors?.first_name}
 						submitted={formData.submitted}
@@ -72,7 +68,7 @@ const Register = (props) => {
 						name="last_name"
 						type="text"
 						label="Last Name"
-						value={formData?.last_name}
+						value={formData.last_name}
 						onChange={onChange}
 						error={formData.errors?.last_name}
 						submitted={formData.submitted}
@@ -82,7 +78,7 @@ const Register = (props) => {
 						name="email"
 						type="email"
 						label="Email"
-						value={formData?.email}
+						value={formData.email}
 						onChange={onChange}
 						error={formData.errors?.email}
 						submitted={formData.submitted}
@@ -92,7 +88,7 @@ const Register = (props) => {
 						name="password"
 						type="password"
 						label="Password"
-						value={formData?.password}
+						value={formData.password}
 						onChange={onChange}
 						error={formData.errors?.password}
 						submitted={formData.submitted}
@@ -102,7 +98,7 @@ const Register = (props) => {
 						name="password_confirm"
 						type="password"
 						label="Confirm Password"
-						value={formData?.password_confirm}
+						value={formData.password_confirm}
 						onChange={onChange}
 						error={formData.errors?.password_confirm}
 						submitted={formData.submitted}

@@ -1,45 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
-import axios from "axios";
+import { useHistory } from "react-router-dom";
 // import components
-import { Container, Card, Form, Input, Button, Label } from "reactstrap";
+import { Container, Card, Form, Button } from "reactstrap";
 import FormGroup from "./FormGroup";
+// import validation
+import validateLogin from "../../validate/login";
 // import actions/store
 import { useStore } from "../../store/useStore.js";
 import { loginUser } from "../../store/actions/users";
 
 const Login = (props) => {
-	const [login, setLogin] = useState({
+	const { dispatch } = useStore();
+	const history = useHistory();
+	const [formData, setFormData] = useState({
 		email: "",
 		password: "",
+		submitted: false,
+		errors: {},
 	});
-	const [errors, setErrors] = useState({});
 
-	const loginUser = async (userData) => {
-		try {
-			await axios.post("/api/users/login", userData);
-		} catch (error) {
-			setErrors(error.response.data);
-		}
-	};
-
+	// update formData state input change
 	const onChange = (event) => {
-		setLogin({
-			...login,
+		// collect new updated formData as user
+		const user = {
+			...formData,
 			[event.target.name]: event.target.value,
+		};
+		// validate formData and log errors when formData changes
+		const { errors } = validateLogin(user);
+		setFormData({
+			...user,
+			errors,
 		});
 	};
 
-	// useEffect(() => {
-	// 	// validate request
-	// 	const { errors, isValid } = validateLogin(login);
-	// 	setErrors(errors);
-	// }, [login]);
-
-	const onSubmit = (event) => {
+	// register formData on form submit
+	const onSubmit = async (event) => {
 		event.preventDefault();
-		loginUser(login);
+		// register user and await reponse if errors
+		const response = await loginUser(formData, history, dispatch);
+		setFormData({
+			...formData,
+			submitted: true,
+			errors: response,
+		});
 	};
 
 	return (
@@ -51,21 +57,23 @@ const Login = (props) => {
 						name="email"
 						type="email"
 						label="Email"
-						value={login.email}
+						value={formData.email}
 						onChange={onChange}
-						error={errors.email}
+						error={formData.errors?.email}
+						submitted={formData.submitted}
 					/>
 					<FormGroup
 						required
 						name="password"
 						type="password"
 						label="Password"
-						value={login.password}
+						value={formData.password}
 						onChange={onChange}
-						error={errors.password}
+						error={formData.errors?.password}
+						submitted={formData.submitted}
 					/>
 					<ButtonGroup>
-						<StyledButton color="success" tyoe="submit">
+						<StyledButton color="success" type="submit">
 							Login
 						</StyledButton>
 						<StyledButton color="primary" href="/register">
