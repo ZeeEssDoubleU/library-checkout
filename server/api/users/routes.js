@@ -1,21 +1,15 @@
 const express = require(`express`);
 const router = express.Router();
-const { pool } = require(`../config`);
+const { pool } = require(`../../config/database`);
 const bcrypt = require("bcrypt");
 const capitalize = require("lodash/fp/capitalize");
 // import validations
-const validateRegister = require(`../../client/src/validate/register`);
-const validateLogin = require(`../../client/src/validate/login`);
-
-const findUser = async (input) => {
-	const key = Object.keys(input)[0];
-
-	const result = await pool.query(
-		`SELECT * FROM public.user WHERE ${key} = $1`,
-		[input[key]],
-	);
-	return result.rows[0];
-};
+const validateRegister = require(`../../../client/src/validate/register`);
+const validateLogin = require(`../../../client/src/validate/login`);
+// import helpers
+const { findUser } = require("./helpers");
+// import passport
+const passport = require("../../config/passport");
 
 // @route - GET api/users
 // @desc - get all users
@@ -101,59 +95,64 @@ router.post(`/register`, async (request, response) => {
 // @route - POST api/users/login
 // @desc - login user
 // @access - public
-router.post(`/login`, async (request, response) => {
-	// validate request
-	const { errors, isValid } = validateLogin(request.body);
+// router.post(`/login`, async (request, response) => {
+// 	// validate request
+// 	const { errors, isValid } = validateLogin(request.body);
 
-	// if request not valid, return errors
-	if (!isValid) {
-		return response.status(422).json(errors);
-	}
+// 	// if request not valid, return errors
+// 	if (!isValid) {
+// 		return response.status(422).json(errors);
+// 	}
 
-	try {
-		const { email, password } = request.body;
-		// find user
-		const user = await findUser({ email });
+// 	try {
+// 		const { email, password } = request.body;
+// 		// find user
+// 		const user = await findUser({ email });
 
-		// if no email (user) found, send error
-		if (!user) {
-			errors.email = `Email (user) not found.`;
-			response.status(404).json(errors);
-		} else {
-			// compare passwords
-			const match = await bcrypt.compare(password, user.password);
-			if (match) {
-				console.log("MATCH MATCH MATCH");
-			} else {
-				errors.password = `Password is incorrect.`;
-				response.status(401).json(errors);
-			}
+// 		// if no email (user) found, send error
+// 		if (!user) {
+// 			errors.email = `Email (user) not found.`;
+// 			response.status(401).json(errors);
+// 		} else {
+// 			// compare passwords
+// 			const match = await bcrypt.compare(password, user.password);
+// 			if (match) {
+// 				response.status(200).json(email);
+// 			} else {
+// 				errors.password = `Password is incorrect.`;
+// 				response.status(401).json(errors);
+// 			}
 
-			// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES
-			// TODO: MAYBE ADD LOGGED IN USER TO STORE STATE
-			// // hash (encrypt password)
-			// bcrypt.hash(newUser.password, 12, async (err, hash) => {
-			// 	if (err) throw err;
-			// 	// hash password
-			// 	newUser.password = await hash;
+// 			// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES
+// 			// TODO: MAYBE ADD LOGGED IN USER TO STORE STATE
+// 			// // hash (encrypt password)
+// 			// bcrypt.hash(newUser.password, 12, async (err, hash) => {
+// 			// 	if (err) throw err;
+// 			// 	// hash password
+// 			// 	newUser.password = await hash;
 
-			// 	// create new user in database
-			// 	const result = await pool.query(
-			// 		`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
-			// 		[
-			// 			newUser.first_name,
-			// 			newUser.last_name,
-			// 			newUser.email,
-			// 			newUser.password,
-			// 		],
-			// 	);
+// 			// 	// create new user in database
+// 			// 	const result = await pool.query(
+// 			// 		`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
+// 			// 		[
+// 			// 			newUser.first_name,
+// 			// 			newUser.last_name,
+// 			// 			newUser.email,
+// 			// 			newUser.password,
+// 			// 		],
+// 			// 	);
 
-			// 	response.status(201).json(result.rows[0]);
-			// });
-		}
-	} catch (error) {
-		console.error(error);
-	}
+// 			// 	response.status(201).json(result.rows[0]);
+// 			// });
+// 		}
+// 	} catch (error) {
+// 		console.error(error);
+// 	}
+// });
+
+router.post(`/login`, passport.authenticate("local"), (req, res) => {
+	const { user } = req;
+	res.json({ email: user.email });
 });
 
 // @route - POST api/users

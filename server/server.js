@@ -1,7 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const { pool } = require("./config");
+const { pool } = require("./config/database");
+// session related imports
+const session = require("express-session");
+const passport = require("passport");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -9,6 +12,17 @@ const PORT = process.env.PORT || 5000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
+// // set up session
+// app.use(
+// 	session({
+// 		secret: process.env.SECRET,
+// 		resave: false,
+// 		saveUninitialized: false,
+// 	}),
+// );
+// initialize session
+app.use(passport.initialize());
+app.use(passport.session());
 
 // default route message
 app.route("/").get((req, res) => {
@@ -18,8 +32,8 @@ app.route("/").get((req, res) => {
 });
 
 // import and use routes
-const books = require("./routes/books");
-const users = require("./routes/users");
+const books = require("./api/books/routes");
+const users = require("./api/users/routes");
 app.use("/api/books", books);
 app.use("/api/users", users);
 

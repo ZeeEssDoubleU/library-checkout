@@ -25,8 +25,7 @@ const Book = (props) => {
 		const local = new Date(date);
 		const formatDate = format("M-d-yyyy")(local);
 		const formatTime = format("E, h:mm a")(local);
-		const formatted = <pre>{`${formatDate}\n${formatTime}`}</pre>;
-		return formatted;
+		return `${formatDate}\n${formatTime}`;
 	};
 
 	return (
@@ -37,22 +36,25 @@ const Book = (props) => {
 			</CardHeader>
 			<CardBody>
 				{!isEmpty(userFullName) && (
-					<CardText>
-						Checked out to: <br />
+					<pre>
+						Checked out to:
+						<br />
 						{userFullName}
-					</CardText>
+					</pre>
 				)}
 				{!isEmpty(props.dateCheckedOut) && (
-					<CardText>
+					<pre>
 						Checkout date:
-						<br /> {formatDate(props.dateCheckedOut)}
-					</CardText>
+						<br />
+						{formatDate(props.dateCheckedOut)}
+					</pre>
 				)}
 				{!isEmpty(props.dateOverdue) && (
-					<CardText>
+					<pre>
 						Overdue date:
-						<br /> {formatDate(props.dateOverdue)}
-					</CardText>
+						<br />
+						{formatDate(props.dateOverdue)}
+					</pre>
 				)}
 			</CardBody>
 		</Card>
@@ -60,5 +62,4 @@ const Book = (props) => {
 };
 
 Book.propTypes = {};
-
 export default Book;

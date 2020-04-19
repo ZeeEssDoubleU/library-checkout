@@ -38,7 +38,7 @@ export const loginUser = async (userData, history, dispatch) => {
 			type: types.LOGIN_USER,
 			payload: response.data,
 		});
-		history.push("/books/checked-out");
+		console.log(`Success!  Logged in as user: ${response.data}.`);
 	} catch (error) {
 		return error.response.data;
 	}
