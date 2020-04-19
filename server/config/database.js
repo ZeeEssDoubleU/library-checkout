@@ -9,7 +9,7 @@ const connectionString = isProduction
 	? process.env.DATABASE_URL
 	: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`;
 
-const pool = new Pool({
+const db = new Pool({
 	connectionString,
 	ssl: isProduction,
 });
@@ -28,7 +28,7 @@ const postLimiter = rateLimit({
 
 module.exports = {
 	isProduction,
-	pool,
+	db,
 	corsOptions,
 	limiter,
 	postLimiter,

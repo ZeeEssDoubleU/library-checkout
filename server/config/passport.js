@@ -1,7 +1,6 @@
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
-const { pool } = require("./database");
 const { findUser } = require("../api/users/helpers");
 
 passport.use(

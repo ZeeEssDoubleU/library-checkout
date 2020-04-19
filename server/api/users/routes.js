@@ -1,6 +1,6 @@
 const express = require(`express`);
 const router = express.Router();
-const { pool } = require(`../../config/database`);
+const { db } = require(`../../config/database`);
 const bcrypt = require("bcrypt");
 const capitalize = require("lodash/fp/capitalize");
 // import validations
@@ -16,7 +16,7 @@ const passport = require("../../config/passport");
 // @access - public
 router.get(`/`, async (request, response) => {
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`SELECT * FROM public.user ORDER BY last_name ASC`,
 		);
 		response.status(200).json(result.rows);
@@ -32,10 +32,9 @@ router.get(`/:id`, async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
-		const result = await pool.query(
-			`SELECT * FROM public.user WHERE id = $1`,
-			[id],
-		);
+		const result = await db.query(`SELECT * FROM public.user WHERE id = $1`, [
+			id,
+		]);
 		response.status(200).json(result.rows);
 	} catch (error) {
 		throw error;
@@ -74,7 +73,7 @@ router.post(`/register`, async (request, response) => {
 				newUser.password = await hash;
 
 				// create new user in database
-				const result = await pool.query(
+				const result = await db.query(
 					`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
 					[
 						capitalize(newUser.first_name),
@@ -132,7 +131,7 @@ router.post(`/register`, async (request, response) => {
 // 			// 	newUser.password = await hash;
 
 // 			// 	// create new user in database
-// 			// 	const result = await pool.query(
+// 			// 	const result = await db.query(
 // 			// 		`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
 // 			// 		[
 // 			// 			newUser.first_name,
@@ -162,7 +161,7 @@ router.post(`/`, async (request, response) => {
 	const { name, email } = request.body;
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`INSERT INTO public.user (name, email) VALUES ($1, $2) RETURNING *`,
 			[name, email],
 		);
@@ -180,7 +179,7 @@ router.put(`/:id`, async (request, response) => {
 	const { name, email } = request.body;
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`UPDATE public.user SET name = $1, email = $2 WHERE id = $3 RETURNING *`,
 			[name, email, id],
 		);
@@ -197,7 +196,7 @@ router.delete(`/:id`, async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`DELETE FROM public.user WHERE id = $1 RETURNING *`,
 			[id],
 		);

@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const { pool } = require("./config/database");
 // session related imports
 const session = require("express-session");
 const passport = require("passport");

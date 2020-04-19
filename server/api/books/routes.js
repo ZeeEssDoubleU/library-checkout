@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { pool } = require("../../config/database");
+const { db } = require("../../config/database");
 
 const books = `
 	SELECT 
@@ -24,7 +24,7 @@ const books_checked_out = `
 // @access - public
 router.get("/", async (request, response) => {
 	try {
-		const result = await pool.query(`${books} ORDER BY book.title ASC`);
+		const result = await db.query(`${books} ORDER BY book.title ASC`);
 		response.status(200).json(result.rows);
 	} catch (error) {
 		console.error(error);
@@ -36,7 +36,7 @@ router.get("/", async (request, response) => {
 // @access - public
 router.get("/available", async (request, response) => {
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`${books} WHERE book.quantity_available > 0 ORDER BY book.title ASC`,
 		);
 		response.status(200).json(result.rows);
@@ -50,7 +50,7 @@ router.get("/available", async (request, response) => {
 // @access - public
 router.get("/checked-out", async (request, response) => {
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`${books_checked_out} ORDER BY book.title ASC`,
 		);
 		response.status(200).json(result.rows);
@@ -66,7 +66,7 @@ router.get("/:id", async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
-		const result = await pool.query(`${books} WHERE book.id = $1`, [id]);
+		const result = await db.query(`${books} WHERE book.id = $1`, [id]);
 		response.status(200).json(result.rows);
 	} catch (error) {
 		console.error(error);
@@ -80,7 +80,7 @@ router.post("/", async (request, response) => {
 	const { title, author } = request.body;
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`INSERT INTO books (title, author) VALUES ($1, $2) RETURNING *`,
 			[title, author],
 		);
@@ -98,7 +98,7 @@ router.put("/:id", async (request, response) => {
 	const { title, author } = request.body;
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			`UPDATE books SET title = $1, author = $2 WHERE id = $3 RETURNING *`,
 			[title, author, id],
 		);
@@ -115,7 +115,7 @@ router.delete("/:id", async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
-		const result = await pool.query(
+		const result = await db.query(
 			"DELETE FROM book WHERE id = $1 RETURNING *",
 			[id],
 		);
