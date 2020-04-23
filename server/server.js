@@ -2,23 +2,25 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 // session related imports
+const flash = require("express-flash");
 const session = require("express-session");
 const passport = require("passport");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const { PORT = 5000, SESSION_SECRET } = process.env;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
-// // set up session
-// app.use(
-// 	session({
-// 		secret: process.env.SECRET,
-// 		resave: false,
-// 		saveUninitialized: false,
-// 	}),
-// );
+// set up session
+app.use(flash()); // required to flash messages from passport.js
+app.use(
+	session({
+		secret: `${process.env.SESSION_SECRET}`,
+		resave: false,
+		saveUninitialized: false,
+	}),
+); // required for passport sessions
 // initialize session
 app.use(passport.initialize());
 app.use(passport.session());

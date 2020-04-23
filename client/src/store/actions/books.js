@@ -12,11 +12,7 @@ export const types = {
 // get all books
 export const getBooks = async (dispatch) => {
 	try {
-		const response = await axios({
-			method: "get",
-			url: "/api/books",
-			baseURL: "/",
-		});
+		const response = await axios.get("/api/books");
 		dispatch({
 			type: types.GET_BOOKS_ALL,
 			payload: response.data,
@@ -29,11 +25,7 @@ export const getBooks = async (dispatch) => {
 // get available books
 export const getAvailableBooks = async (dispatch) => {
 	try {
-		const response = await axios({
-			method: "get",
-			url: "/api/books/available",
-			baseURL: "/",
-		});
+		const response = await axios.get("/api/books/available");
 		dispatch({
 			type: types.GET_BOOKS_AVAILABLE,
 			payload: response.data,
@@ -46,11 +38,7 @@ export const getAvailableBooks = async (dispatch) => {
 // get checked out books
 export const getCheckedOutBooks = async (dispatch) => {
 	try {
-		const response = await axios({
-			method: "get",
-			url: "/api/books/checked-out",
-			baseURL: "/",
-		});
+		const response = await axios.get("/api/books/checked-out");
 		dispatch({
 			type: types.GET_BOOKS_CHECKED_OUT,
 			payload: response.data,

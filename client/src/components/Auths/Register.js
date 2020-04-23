@@ -19,8 +19,8 @@ const Register = (props) => {
 		password: "",
 		password_confirm: "",
 		submitted: false,
-		errors: {},
 	});
+	const [errors, setErrors] = useState({});
 
 	// update formData state input change
 	const onChange = (event) => {
@@ -30,11 +30,9 @@ const Register = (props) => {
 			[event.target.name]: event.target.value,
 		};
 		// validate formData and log errors when formData changes
-		const { errors } = validateRegister(newUser);
-		setFormData({
-			...newUser,
-			errors,
-		});
+		const { errors: clientErrors } = validateRegister(newUser);
+		setFormData(newUser);
+		setErrors(clientErrors);
 	};
 
 	// register formData on form submit
@@ -45,8 +43,8 @@ const Register = (props) => {
 		setFormData({
 			...formData,
 			submitted: true,
-			errors: response,
 		});
+		setErrors(response);
 	};
 
 	return (
@@ -60,7 +58,7 @@ const Register = (props) => {
 						label="First Name"
 						value={formData.first_name}
 						onChange={onChange}
-						error={formData.errors?.first_name}
+						error={errors?.first_name}
 						submitted={formData.submitted}
 					/>
 					<FormGroup
@@ -70,7 +68,7 @@ const Register = (props) => {
 						label="Last Name"
 						value={formData.last_name}
 						onChange={onChange}
-						error={formData.errors?.last_name}
+						error={errors?.last_name}
 						submitted={formData.submitted}
 					/>
 					<FormGroup
@@ -80,7 +78,7 @@ const Register = (props) => {
 						label="Email"
 						value={formData.email}
 						onChange={onChange}
-						error={formData.errors?.email}
+						error={errors?.email}
 						submitted={formData.submitted}
 					/>
 					<FormGroup
@@ -90,7 +88,7 @@ const Register = (props) => {
 						label="Password"
 						value={formData.password}
 						onChange={onChange}
-						error={formData.errors?.password}
+						error={errors?.password}
 						submitted={formData.submitted}
 					/>
 					<FormGroup
@@ -100,7 +98,7 @@ const Register = (props) => {
 						label="Confirm Password"
 						value={formData.password_confirm}
 						onChange={onChange}
-						error={formData.errors?.password_confirm}
+						error={errors?.password_confirm}
 						submitted={formData.submitted}
 					/>
 					<ButtonGroup>

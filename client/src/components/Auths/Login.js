@@ -18,8 +18,8 @@ const Login = (props) => {
 		email: "",
 		password: "",
 		submitted: false,
-		errors: {},
 	});
+	const [errors, setErrors] = useState({});
 
 	// update formData state input change
 	const onChange = (event) => {
@@ -29,11 +29,9 @@ const Login = (props) => {
 			[event.target.name]: event.target.value,
 		};
 		// validate formData and log errors when formData changes
-		const { errors } = validateLogin(user);
-		setFormData({
-			...user,
-			errors,
-		});
+		const { errors: clientErrors } = validateLogin(user);
+		setFormData(user);
+		setErrors(clientErrors);
 	};
 
 	// register formData on form submit
@@ -44,8 +42,8 @@ const Login = (props) => {
 		setFormData({
 			...formData,
 			submitted: true,
-			errors: response,
 		});
+		setErrors(response);
 	};
 
 	return (
@@ -59,7 +57,7 @@ const Login = (props) => {
 						label="Email"
 						value={formData.email}
 						onChange={onChange}
-						error={formData.errors?.email}
+						error={errors?.email}
 						submitted={formData.submitted}
 					/>
 					<FormGroup
@@ -69,7 +67,7 @@ const Login = (props) => {
 						label="Password"
 						value={formData.password}
 						onChange={onChange}
-						error={formData.errors?.password}
+						error={errors?.password}
 						submitted={formData.submitted}
 					/>
 					<ButtonGroup>

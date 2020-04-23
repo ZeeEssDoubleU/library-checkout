@@ -6,12 +6,14 @@ import Book from "./Book";
 // import store, actions
 import { useStore } from "../../store/useStore.js";
 import { getCheckedOutBooks } from "../../store/actions/books";
+import { useHistory } from "react-router-dom";
 
-const AllBooks = (props) => {
+const CheckedOutBooks = (props) => {
 	const { state, dispatch } = useStore();
+	const history = useHistory();
 
 	useEffect(() => {
-		getCheckedOutBooks(dispatch);
+		getCheckedOutBooks(dispatch, history);
 	}, []);
 
 	const displayBooks =
@@ -31,9 +33,9 @@ const AllBooks = (props) => {
 	return <Grid>{displayBooks}</Grid>;
 };
 
-AllBooks.propTypes = {};
+CheckedOutBooks.propTypes = {};
 
-export default AllBooks;
+export default CheckedOutBooks;
 
 const Grid = styled.div`
 	display: grid;

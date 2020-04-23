@@ -25,7 +25,8 @@ export const getUsers = async (dispatch) => {
 export const registerUser = async (userData, history) => {
 	try {
 		const response = await axios.post("/api/users/register", userData);
-		history.push("/login");
+		// if successful, redirect to login page
+		history.push(response.headers.location);
 	} catch (error) {
 		return error.response.data;
 	}
@@ -39,6 +40,8 @@ export const loginUser = async (userData, history, dispatch) => {
 			payload: response.data,
 		});
 		console.log(`Success!  Logged in as user: ${response.data}.`);
+		// // if successful, redirect to checked-out page
+		// history.push("/books/checked-out");
 	} catch (error) {
 		return error.response.data;
 	}
