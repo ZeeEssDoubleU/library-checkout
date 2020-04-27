@@ -1,10 +1,10 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
 // session related imports
-const flash = require("express-flash");
-const session = require("express-session");
-const passport = require("passport");
+import flash from "express-flash";
+import session from "express-session";
+import passport from "passport";
 
 const app = express();
 const { PORT = 5000, SESSION_SECRET } = process.env;
@@ -33,8 +33,8 @@ app.route("/").get((req, res) => {
 });
 
 // import and use routes
-const books = require("./api/books/routes");
-const users = require("./api/users/routes");
+import books from "./api/books/routes";
+import users from "./api/users/routes";
 app.use("/api/books", books);
 app.use("/api/users", users);
 

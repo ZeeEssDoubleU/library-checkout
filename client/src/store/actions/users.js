@@ -32,9 +32,24 @@ export const registerUser = async (userData, history) => {
 	}
 };
 
-export const loginUser = async (userData, history, dispatch) => {
+export const loginUser_local = async (userData, history, dispatch) => {
 	try {
-		const response = await axios.post("/api/users/login", userData);
+		const response = await axios.post("/api/users/login-local", userData);
+		dispatch({
+			type: types.LOGIN_USER,
+			payload: response.data,
+		});
+		console.log(`Success!  Logged in as user: ${response.data.email}.`);
+		// // if successful, redirect to checked-out page
+		// history.push("/books/checked-out");
+	} catch (error) {
+		return error.response.data;
+	}
+};
+
+export const loginUser_jwt = async (userData, history, dispatch) => {
+	try {
+		const response = await axios.post("/api/users/login-jwt", userData);
 		dispatch({
 			type: types.LOGIN_USER,
 			payload: response.data,

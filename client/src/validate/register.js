@@ -1,5 +1,5 @@
-const { isEmail, isLength, equals } = require("validator");
-const isEmpty = require("lodash/fp/isEmpty");
+import { isEmail, isLength, equals } from "validator";
+import isEmpty from "lodash/fp/isEmpty";
 
 const validateRegister = (data) => {
 	let errors = {};
@@ -51,4 +51,4 @@ const validateRegister = (data) => {
 	};
 };
 
-module.exports = validateRegister;
+export default validateRegister;

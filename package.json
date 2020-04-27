@@ -16,10 +16,9 @@
 		"i-all": "npm i && npm run i-server && npm run i-client",
 		"update-all": "npm update && npm run update-server && npm run update-client",
 		"uninstall-all": "npm uninstall && npm run uninstall-server && npm run uninstall-client",
-		"server-run": "npm run server --prefix server",
-		"server-start": "npm start --prefix server",
+		"server": "npm run server --prefix server",
 		"client": "npm start --prefix client",
-		"dev": "concurrently 'npm run server-run' 'npm run client'",
+		"dev": "concurrently 'npm run server' 'npm run client'",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Zachary Williams <zak.williams2287@gmail.com>",

@@ -3,15 +3,15 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
 // import components
-import { Container, Card, Form, Button } from "reactstrap";
-import FormGroup from "./FormGroup";
+import { Container, Card, CardHeader, Form, Button } from "reactstrap";
+import FormGroup from "../FormGroup";
 // import validation
-import validateLogin from "../../validate/login";
+import validateLogin from "../../../validate/login";
 // import actions/store
-import { useStore } from "../../store/useStore.js";
-import { loginUser } from "../../store/actions/users";
+import { useStore } from "../../../store/useStore.js";
+import { loginUser_local } from "../../../store/actions/users";
 
-const Login = (props) => {
+const Local = (props) => {
 	const { dispatch } = useStore();
 	const history = useHistory();
 	const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ const Login = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await loginUser(formData, history, dispatch);
+		const response = await loginUser_local(formData, history, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,
@@ -49,6 +49,7 @@ const Login = (props) => {
 	return (
 		<Container fluid>
 			<StyledCard>
+				<CardHeader>Login Local</CardHeader>
 				<Form onSubmit={onSubmit} noValidate>
 					<FormGroup
 						required
@@ -84,9 +85,9 @@ const Login = (props) => {
 	);
 };
 
-Login.propTypes = {};
+Local.propTypes = {};
 
-export default Login;
+export default Local;
 
 const StyledCard = styled(Card)`
 	margin: 2rem;

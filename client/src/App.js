@@ -3,7 +3,7 @@ import { Route, Switch, withRouter } from "react-router-dom";
 // import components
 import Nav from "./components/Nav";
 import Landing from "./components/Landing";
-import Login from "./components/Auths/Login.js";
+import Login from "./components/Auths/Login/Login.js";
 import Register from "./components/Auths/Register.js";
 import AllBooks from "./components/Books/AllBooks.js";
 import AvailableBooks from "./components/Books/AvailableBooks.js";

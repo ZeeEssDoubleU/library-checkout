@@ -1,16 +1,16 @@
-const { db } = require(`../../config/database`);
-const bcrypt = require("bcrypt");
-const capitalize = require("lodash/fp/capitalize");
+import { db } from "../../config/database";
+import bcrypt from "bcrypt";
+import capitalize from "lodash/fp/capitalize";
 // import validations
-const validateRegister = require(`../../../client/src/validate/register`);
-const validateLogin = require(`../../../client/src/validate/login`);
+import validateRegister from "../../../client/src/validate/register";
+import validateLogin from "../../../client/src/validate/login";
 // import passport
-const passport = require("../../config/passport");
+import passport from "../../config/passport";
 
 // *************
 // helpers
 // *************
-exports.findUser = async (input) => {
+export const findUser = async (input) => {
 	const key = Object.keys(input)[0];
 
 	const result = await db.query(
@@ -22,13 +22,13 @@ exports.findUser = async (input) => {
 
 // TODO: reviset these middleware for passport local strategy if necessary
 // *** NOT a fan of local strategy with react
-exports.checkAuthenticated = (request, response, next) => {
+export const checkAuthenticated = (request, response, next) => {
 	return request.isAuthenticated()
 		? next()
 		: response.status(401).json({ auth: `User is not authorized.` });
 };
 
-exports.checkLoggedIn = (request, response, next) => {
+export const checkLoggedIn = (request, response, next) => {
 	return request.isAuthenticated()
 		? response.json(`WHAT!!! Already logged in!!!`)
 		: next();
@@ -37,7 +37,7 @@ exports.checkLoggedIn = (request, response, next) => {
 // *************
 // controllers
 // *************
-exports.getUsers = async (request, response, next) => {
+export const getUsers = async (request, response) => {
 	try {
 		const result = await db.query(
 			`SELECT * FROM public.user ORDER BY last_name ASC`,
@@ -49,7 +49,7 @@ exports.getUsers = async (request, response, next) => {
 	}
 };
 
-exports.getUser_byId = async (request, response) => {
+export const getUser_byId = async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
@@ -63,7 +63,7 @@ exports.getUser_byId = async (request, response) => {
 	}
 };
 
-exports.createUser = async (request, response) => {
+export const createUser = async (request, response) => {
 	// validate request
 	const { errors, isValid } = validateRegister(request.body);
 
@@ -75,7 +75,7 @@ exports.createUser = async (request, response) => {
 	try {
 		const { first_name, last_name, email, password } = request.body;
 		// find user
-		const user = await findUser({ email });
+		const user = await this.findUser({ email });
 
 		// if user already registered, send error
 		if (user) {
@@ -123,7 +123,9 @@ exports.createUser = async (request, response) => {
 //
 //
 
-exports.loginUser = async (request, response, next) => {
+export const loginUser_local = async (request, response, next) => {
+	// TODO: will likely refactor validation to use YUP or JOI so that they can be implemented as middleware
+	// TODO: using validation as middleware will allow me to use passport.validate better as middleware
 	const { errors, isValid } = validateLogin(request.body);
 
 	// if request not valid, return errors
@@ -153,19 +155,51 @@ exports.loginUser = async (request, response, next) => {
 			if (err) {
 				return next(err);
 			}
-			return response.status(200).json(user.email);
+			return response.status(200).json(user);
 		});
 	})(request);
 };
 
-//
-//
-//
-//
-//
-//
+export const loginUser_jwt = async (request, response) => {
+	// validate request
+	const { errors, isValid } = validateLogin(request.body);
 
-exports.updateUser = async (request, response) => {
+	// if request not valid, return errors
+	if (!isValid) {
+		return response.status(422).json(errors);
+	}
+
+	try {
+		const { email, password } = request.body;
+		// find user (use this because of exports)
+		const user = await this.findUser({ email });
+
+		// if no email (user) found, send error
+		if (!user) {
+			errors.email = `Email (user) not found.`;
+			return response.status(404).json(errors);
+		} else {
+			// compare passwords
+			const match = await bcrypt.compare(password, user.password);
+			if (match) {
+				console.log(`Success!  Password is correct :D`);
+				// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES
+				// TODO: MAYBE ADD LOGGED IN USER TO STORE STATE
+
+				
+
+				return response.status(200).json(email);
+			} else {
+				errors.password = `Password is incorrect :(`;
+				return response.status(401).json(errors);
+			}
+		}
+	} catch (error) {
+		return console.error(error);
+	}
+};
+
+export const updateUser = async (request, response) => {
 	const id = parseInt(request.params.id);
 	const { name, email } = request.body;
 
@@ -180,7 +214,7 @@ exports.updateUser = async (request, response) => {
 	}
 };
 
-exports.deleteUser = async (request, response) => {
+export const deleteUser = async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
@@ -194,7 +228,7 @@ exports.deleteUser = async (request, response) => {
 	}
 };
 
-exports.logoutUser = (request, response) => {
+export const logoutUser = (request, response) => {
 	request.logout();
 	return response.redirect(`/login`);
 };

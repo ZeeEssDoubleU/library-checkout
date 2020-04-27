@@ -1,15 +1,19 @@
-const passport = require(`passport`);
-const LocalStrategy = require(`passport-local`).Strategy;
-const bcrypt = require(`bcrypt`);
-const controllers_users = require(`../api/users/controllers`);
+import passport from "passport";
+import bcrypt from "bcrypt";
+// import controllers
+import { findUser } from "../api/users/controllers";
+// import strategies
+import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 
+// local strategy
 passport.use(
 	new LocalStrategy(
 		{ usernameField: `email` },
 		async (email, password, done) => {
 			try {
 				// find user
-				const user = await controllers_users.findUser({ email });
+				const user = await findUser({ email });
 
 				// if no user found, return false with error message
 				if (!user) {
@@ -47,6 +51,29 @@ passport.use(
 	),
 );
 
+// jwt strategy
+var opts = {};
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.secretOrKey = "secret";
+opts.issuer = "accounts.examplesoft.com";
+opts.audience = "yoursite.net";
+passport.use(
+	new JwtStrategy(opts, function (jwt_payload, done) {
+		User.findOne({ id: jwt_payload.sub }, function (err, user) {
+			if (err) {
+				return done(err, false);
+			}
+			if (user) {
+				return done(null, user);
+			} else {
+				return done(null, false);
+				// or you could create a new account
+			}
+		});
+	}),
+);
+
+// serialize/deserialize user
 passport.serializeUser((user, done) => {
 	return done(null, user.id);
 });
@@ -54,7 +81,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
 	try {
 		// find user
-		const user = await controllers_users.findUser({ id });
+		const user = await findUser({ id });
 		return done(null, user);
 	} catch (err) {
 		console.error(`Error when selecting user on session deserialize`, err);
@@ -62,4 +89,4 @@ passport.deserializeUser(async (id, done) => {
 	}
 });
 
-module.exports = passport;
+export default passport;

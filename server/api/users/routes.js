@@ -1,14 +1,17 @@
-const router = require(`express`).Router();
+import express from "express";
 // import controllers
-const {
+import {
 	getUsers,
 	getUser_byId,
 	createUser,
-	loginUser,
+	loginUser_local,
+	loginUser_jwt,
 	updateUser,
 	deleteUser,
 	logoutUser,
-} = require("./controllers");
+} from "./controllers";
+
+const router = express.Router();
 
 // @route - GET api/users
 // @desc - get all users
@@ -28,7 +31,8 @@ router.post(`/register`, createUser);
 // @route - POST api/users/login
 // @desc - login user
 // @access - public
-router.post(`/login`, loginUser);
+router.post(`/login-local`, loginUser_local);
+router.post(`/login-jwt`, loginUser_jwt);
 
 // @route - PUT api/users/:id
 // @desc - update user by id
@@ -45,4 +49,4 @@ router.delete(`/:id`, deleteUser);
 // @access - private
 router.delete(`/logout`, logoutUser);
 
-module.exports = router;
+export default router;

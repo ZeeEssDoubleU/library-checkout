@@ -1,6 +1,6 @@
-const router = require("express").Router();
+import express from "express";
 // import controllers
-const {
+import {
 	getBooks,
 	getBooks_available,
 	getBooks_checkedOut,
@@ -8,10 +8,12 @@ const {
 	postBook,
 	updateBook,
 	deleteBook,
-} = require("./controllers");
-const { checkAuthenticated } = require(`../users/controllers`);
-// import passport
-const passport = require("../../config/passport");
+} from "./controllers";
+import { checkAuthenticated } from "../users/controllers";
+// import passport config
+import passport from "../../config/passport";
+
+const router = express.Router();
 
 // @route - GET api/books
 // @desc - get all books
@@ -49,4 +51,4 @@ router.put("/:id", updateBook);
 // @access - private
 router.delete("/:id", deleteBook);
 
-module.exports = router;
+export default router;

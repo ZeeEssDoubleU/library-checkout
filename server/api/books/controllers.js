@@ -1,4 +1,4 @@
-const { db } = require("../../config/database");
+import { db } from "../../config/database";
 
 // query strings
 const books = `
@@ -19,7 +19,7 @@ const books_checked_out = `
    JOIN public.user ON checkouts.user_id = public.user.id`;
 
 // controllers
-const getBooks = async (request, response) => {
+export const getBooks = async (request, response) => {
 	try {
 		const result = await db.query(`${books} ORDER BY book.title ASC`);
 		return response.status(200).json(result.rows);
@@ -28,7 +28,7 @@ const getBooks = async (request, response) => {
 	}
 };
 
-const getBooks_available = async (request, response) => {
+export const getBooks_available = async (request, response) => {
 	try {
 		const result = await db.query(
 			`${books} WHERE book.quantity_available > 0 ORDER BY book.title ASC`,
@@ -39,7 +39,7 @@ const getBooks_available = async (request, response) => {
 	}
 };
 
-const getBooks_checkedOut = async (request, response) => {
+export const getBooks_checkedOut = async (request, response) => {
 	try {
 		const result = await db.query(
 			`${books_checked_out} ORDER BY book.title ASC`,
@@ -50,7 +50,7 @@ const getBooks_checkedOut = async (request, response) => {
 	}
 };
 
-const getBook_byId = async (request, response) => {
+export const getBook_byId = async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
@@ -61,7 +61,7 @@ const getBook_byId = async (request, response) => {
 	}
 };
 
-const postBook = async (request, response) => {
+export const postBook = async (request, response) => {
 	const { title, author } = request.body;
 
 	try {
@@ -75,7 +75,7 @@ const postBook = async (request, response) => {
 	}
 };
 
-const updateBook = async (request, response) => {
+export const updateBook = async (request, response) => {
 	const id = parseInt(request.params.id);
 	const { title, author } = request.body;
 
@@ -90,7 +90,7 @@ const updateBook = async (request, response) => {
 	}
 };
 
-const deleteBook = async (request, response) => {
+export const deleteBook = async (request, response) => {
 	const id = parseInt(request.params.id);
 
 	try {
@@ -102,14 +102,4 @@ const deleteBook = async (request, response) => {
 	} catch (error) {
 		return console.error(error);
 	}
-};
-
-module.exports = {
-	getBooks,
-	getBooks_available,
-	getBooks_checkedOut,
-	getBook_byId,
-	postBook,
-	updateBook,
-	deleteBook,
 };
