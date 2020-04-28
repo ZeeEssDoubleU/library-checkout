@@ -52,24 +52,34 @@ passport.use(
 );
 
 // jwt strategy
-var opts = {};
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = "secret";
-opts.issuer = "accounts.examplesoft.com";
-opts.audience = "yoursite.net";
+const opts = {
+	jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme("JWT"),
+	secretOrKey: process.env.JWT_SECRET,
+};
 passport.use(
-	new JwtStrategy(opts, function (jwt_payload, done) {
-		User.findOne({ id: jwt_payload.sub }, function (err, user) {
-			if (err) {
-				return done(err, false);
-			}
+	new JwtStrategy(opts, async (jwt_payload, done) => {
+		try {
+			// find user
+			const user = await findUser({ id: jwt_payload.id });
+
+			// if user, return user
 			if (user) {
-				return done(null, user);
+				return done(null, user, {
+					type: `success`,
+					message: `User confirmed.`,
+				});
 			} else {
-				return done(null, false);
-				// or you could create a new account
+				return done(null, false, {
+					type: `jwt`,
+					message: `JSON web token not authorized.`,
+				});
 			}
-		});
+		} catch (err) {
+			return done(err, {
+				type: `passport`,
+				message: `Passport - jwt strategy: ${err}`,
+			});
+		}
 	}),
 );
 

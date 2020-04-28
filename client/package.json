@@ -11,6 +11,7 @@
 		"bcryptjs": "^2.4.3",
 		"bootstrap": "^4.4.1",
 		"date-fns": "^2.12.0",
+		"jwt-decode": "^2.2.0",
 		"lodash": "^4.17.15",
 		"react": "^16.13.1",
 		"react-dom": "^16.13.1",

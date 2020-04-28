@@ -3,7 +3,7 @@ import express from "express";
 import {
 	getUsers,
 	getUser_byId,
-	createUser,
+	registerUser,
 	loginUser_local,
 	loginUser_jwt,
 	updateUser,
@@ -26,7 +26,7 @@ router.get(`/:id`, getUser_byId);
 // @route - POST api/users/register
 // @desc - register user
 // @access - public
-router.post(`/register`, createUser);
+router.post(`/register`, registerUser);
 
 // @route - POST api/users/login
 // @desc - login user

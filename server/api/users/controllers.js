@@ -1,10 +1,11 @@
 import { db } from "../../config/database";
 import bcrypt from "bcrypt";
 import capitalize from "lodash/fp/capitalize";
+import jwt from "jsonwebtoken";
 // import validations
 import validateRegister from "../../../client/src/validate/register";
 import validateLogin from "../../../client/src/validate/login";
-// import passport
+// import passport config
 import passport from "../../config/passport";
 
 // *************
@@ -63,7 +64,7 @@ export const getUser_byId = async (request, response) => {
 	}
 };
 
-export const createUser = async (request, response) => {
+export const registerUser = async (request, response) => {
 	// validate request
 	const { errors, isValid } = validateRegister(request.body);
 
@@ -106,9 +107,11 @@ export const createUser = async (request, response) => {
 				const registeredUser = result.rows[0];
 				// remove registered users password from response
 				delete registeredUser.password;
-				// return response.status(201).json(registeredUser);
-
-				return response.redirect(201, `/login`);
+				// return registered user to client
+				return response.status(201).json({
+					success: "Created new user",
+					user: registeredUser.email,
+				});
 			});
 		}
 	} catch (error) {
@@ -151,7 +154,7 @@ export const loginUser_local = async (request, response, next) => {
 			}
 		}
 		// if user, login user
-		request.logIn(user, (err) => {
+		request.login(user, (err) => {
 			if (err) {
 				return next(err);
 			}
@@ -186,9 +189,32 @@ export const loginUser_jwt = async (request, response) => {
 				// TODO: FINISH REST OF LOGIN FUNCTION USING JWT FOR SESSION COOKIES
 				// TODO: MAYBE ADD LOGGED IN USER TO STORE STATE
 
-				
+				const payload = {
+					id: user.id,
+					email: user.email,
+					firstName: user.first_name,
+					lastName: user.last_name,
+				};
 
-				return response.status(200).json(email);
+				// create jwt
+				jwt.sign(
+					payload,
+					process.env.JWT_SECRET,
+					{ expiresIn: "30m" },
+					(err, token) => {
+						if (err) {
+							errors.token = `Error creating token: ${err}`;
+							return response.status(500).json(errors);
+						}
+						// return token along with extra data
+						return response.status(200).json({
+							auth: true,
+							email: user.email,
+							token,
+							message: `User found and logged in (token created).`,
+						});
+					},
+				);
 			} else {
 				errors.password = `Password is incorrect :(`;
 				return response.status(401).json(errors);
@@ -222,7 +248,7 @@ export const deleteUser = async (request, response) => {
 			`DELETE FROM public.user WHERE id = $1 RETURNING *`,
 			[id],
 		);
-		return response.status(200).send(`Deleted user with ID: ${id}`);
+		return response.status(200).json(`Deleted user with ID: ${id}`);
 	} catch (error) {
 		return console.error(error);
 	}

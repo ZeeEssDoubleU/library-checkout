@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { createContext, useReducer, useContext, useEffect } from "react";
+import isEmpty from "lodash/fp/isEmpty";
 // import action types
 import * as bookActions from "./actions/books";
 import * as userActions from "./actions/users";
@@ -18,8 +19,12 @@ const reducer = (state, action) => {
 			return { ...state, users: action.payload };
 		case userActions.types.GET_USER:
 			return { ...state, user: action.payload };
-		case userActions.types.LOGIN_USER:
-			return { ...state, user_login: action.payload };
+		case userActions.types.SET_CURRENT_USER:
+			return {
+				...state,
+				user_current: action.payload,
+				isAuthenticated: !isEmpty(action.payload),
+			};
 		case errorActions.types.LOG_ERRORS:
 			return { ...state, errors: action.payload };
 		case errorActions.types.CLEAR_ERRORS:
@@ -39,7 +44,8 @@ const initState =
 				book: null,
 				users: null,
 				user: null,
-				user_login: null,
+				user_current: null,
+				isAuthenticated: false,
 				errors: null,
 		  }
 		: {}; // fallback to {} so that sub states don't return null
