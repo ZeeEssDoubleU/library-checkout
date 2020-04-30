@@ -6,3 +6,5 @@ export const setRequestHeaders = () => {
 		headers: { Authorization: token ? `Bearer ${token}` : null },
 	};
 };
+
+// TODO: SETUP MULTIPLE AUTHENTICATION OPTIONS!!!

@@ -2,35 +2,41 @@
 import React, { createContext, useReducer, useContext, useEffect } from "react";
 import isEmpty from "lodash/fp/isEmpty";
 // import action types
-import * as bookActions from "./actions/books";
-import * as userActions from "./actions/users";
-import * as errorActions from "./actions/errors";
+import { actionTypes as actionTypes_books } from "./actions/books";
+import { actionTypes as actionTypes_users } from "./actions/users";
+import { actionTypes as actionTypes_errors } from "./actions/errors";
 
 // reducer
 const reducer = (state, action) => {
 	switch (action.type) {
 		// *** book actions
-		case bookActions.types.GET_BOOKS_ALL:
+		case actionTypes_books.GET_BOOKS_ALL:
 			return { ...state, books_all: action.payload };
-		case bookActions.types.GET_BOOKS_AVAILABLE:
+		case actionTypes_books.GET_BOOKS_AVAILABLE:
 			return { ...state, books_available: action.payload };
-		case bookActions.types.GET_BOOKS_CHECKED_OUT:
+		case actionTypes_books.GET_BOOKS_CHECKED_OUT:
 			return { ...state, books_checked_out: action.payload };
 		// *** user actions
-		case userActions.types.GET_USERS:
+		case actionTypes_users.GET_USERS:
 			return { ...state, users: action.payload };
-		case userActions.types.GET_USER:
+		case actionTypes_users.GET_USER:
 			return { ...state, user: action.payload };
-		case userActions.types.SET_CURRENT_USER:
+		case actionTypes_users.SET_CURRENT_USER:
 			return {
 				...state,
 				user_current: action.payload,
 				isAuthenticated: !isEmpty(action.payload),
 			};
 		// *** error actions
-		case errorActions.types.LOG_ERRORS:
-			return { ...state, errors: action.payload };
-		case errorActions.types.CLEAR_ERRORS:
+		case actionTypes_errors.LOG_ERRORS:
+			return {
+				...state,
+				errors: {
+					...state.errors,
+					...action.payload,
+				},
+			};
+		case actionTypes_errors.CLEAR_ERRORS:
 			return { ...state, errors: action.payload };
 		default:
 			return state;

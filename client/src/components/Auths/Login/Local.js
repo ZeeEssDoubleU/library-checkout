@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
@@ -10,9 +10,10 @@ import validateLogin from "../../../validate/login";
 // import actions/store
 import useStore from "../../../store/useStore.js";
 import { loginUser_local } from "../../../store/actions/users";
+import { logErrors } from "../../../store/actions/errors";
 
 const Local = (props) => {
-	const { dispatch } = useStore();
+	const { state, dispatch } = useStore();
 	const history = useHistory();
 	const [formData, setFormData] = useState({
 		email: "",
@@ -31,7 +32,7 @@ const Local = (props) => {
 		// validate formData and log errors when formData changes
 		const { errors: clientErrors } = validateLogin(user);
 		setFormData(user);
-		setErrors(clientErrors);
+		logErrors({ login_local: clientErrors }, dispatch);
 	};
 
 	// register formData on form submit
@@ -43,8 +44,12 @@ const Local = (props) => {
 			...formData,
 			submitted: true,
 		});
-		setErrors(response);
 	};
+
+	// if global errors present, show on related ui
+	useEffect(() => {
+		setErrors(state.errors?.login_local);
+	}, [state.errors?.login_local]);
 
 	return (
 		<Container fluid>

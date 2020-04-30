@@ -30,7 +30,7 @@ router.get("/available", getBooks_available);
 // @access - private
 router.get(
 	"/checked-out",
-	passport.authenticate("jwt", { session: false }),
+	passport.authenticate(["local", "jwt"]),
 	getBooks_checkedOut,
 );
 // router.get("/checked-out", getBooks_checkedOut);

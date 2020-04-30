@@ -29,6 +29,8 @@ passport.use(
 				delete user.password;
 
 				if (match) {
+					// add auth type to user
+					user.auth = "local";
 					// if match, return success
 					return done(null, user, {
 						type: `success`,
@@ -64,6 +66,8 @@ passport.use(
 
 			// if user, return user
 			if (user) {
+				// add auth type to user
+				user.auth = "jwt";
 				return done(null, user, {
 					type: `success`,
 					message: `User confirmed.`,

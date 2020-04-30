@@ -3,8 +3,9 @@ import jwt_decode from "jwt-decode";
 // import actions
 import { logErrors } from "./errors";
 import { setRequestHeaders } from "./common";
+import { actionTypes as actionTypes_books } from "./books";
 
-export const types = {
+export const actionTypes = {
 	GET_USERS: "GET_USERS",
 	GET_USER: "GET_USER",
 	REGISTER_USER: "REGISTER_USER",
@@ -16,7 +17,7 @@ export const getUsers = async (dispatch) => {
 	try {
 		const response = await axios.get("/api/users", setRequestHeaders());
 		dispatch({
-			type: types.GET_USERS,
+			type: actionTypes.GET_USERS,
 			payload: response.data,
 		});
 	} catch (error) {
@@ -36,7 +37,7 @@ export const registerUser = async (userData, history, dispatch) => {
 		// if successful, redirect to login page
 		history.push("/login");
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors({ register: error.response.data }, dispatch);
 	}
 };
 
@@ -48,7 +49,7 @@ export const loginUser_local = async (userData, history, dispatch) => {
 			setRequestHeaders(),
 		);
 		dispatch({
-			type: types.SET_CURRENT_USER,
+			type: actionTypes.SET_CURRENT_USER,
 			payload: response.data,
 		});
 		console.log(`Success!  Logged in as user:`, response.data.email);
@@ -56,7 +57,7 @@ export const loginUser_local = async (userData, history, dispatch) => {
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors({ login_local: error.response.data }, dispatch);
 	}
 };
 
@@ -74,7 +75,7 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 		// decode JWT to get user data and set login_user state
 		const decoded = jwt_decode(token);
 		dispatch({
-			type: types.SET_CURRENT_USER,
+			type: actionTypes.SET_CURRENT_USER,
 			payload: decoded,
 		});
 
@@ -83,7 +84,7 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors({ login_jwt: error.response.data }, dispatch);
 	}
 };
 
@@ -92,7 +93,11 @@ export const logoutUser = (history, dispatch) => {
 	localStorage.removeItem("JWT");
 
 	dispatch({
-		type: types.SET_CURRENT_USER,
+		type: actionTypes_books.GET_BOOKS_CHECKED_OUT,
+		payload: null,
+	});
+	dispatch({
+		type: actionTypes.SET_CURRENT_USER,
 		payload: null,
 	});
 	// redirect to login page
@@ -113,7 +118,7 @@ export const checkUserLoggedIn = (history, dispatch) => {
 		// decode JWT to get user data and set login_user state
 		const decoded = jwt_decode(token);
 		dispatch({
-			type: types.SET_CURRENT_USER,
+			type: actionTypes.SET_CURRENT_USER,
 			payload: decoded,
 		});
 

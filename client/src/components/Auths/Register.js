@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useHistory } from "react-router-dom";
@@ -10,9 +10,10 @@ import validateRegister from "../../validate/register";
 // import actions/store
 import useStore from "../../store/useStore";
 import { registerUser } from "../../store/actions/users";
+import { logErrors } from "../../store/actions/errors";
 
 const Register = (props) => {
-	const { dispatch } = useStore();
+	const { state, dispatch } = useStore();
 	const history = useHistory();
 	const [formData, setFormData] = useState({
 		first_name: "",
@@ -34,7 +35,7 @@ const Register = (props) => {
 		// validate formData and log errors when formData changes
 		const { errors: clientErrors } = validateRegister(newUser);
 		setFormData(newUser);
-		setErrors(clientErrors);
+		logErrors({ register: clientErrors }, dispatch);
 	};
 
 	// register formData on form submit
@@ -46,8 +47,12 @@ const Register = (props) => {
 			...formData,
 			submitted: true,
 		});
-		setErrors(response);
 	};
+
+	// if global errors present, show on related ui
+	useEffect(() => {
+		setErrors(state.errors?.register);
+	}, [state.errors?.register]);
 
 	return (
 		<Container fluid>

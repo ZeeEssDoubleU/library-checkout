@@ -3,7 +3,7 @@ import axios from "axios";
 import { logErrors } from "./errors";
 import { setRequestHeaders } from "./common";
 
-export const types = {
+export const actionTypes = {
 	GET_BOOKS_ALL: "GET_BOOKS_ALL",
 	GET_BOOKS_AVAILABLE: "GET_BOOKS_AVAILABLE",
 	GET_BOOKS_CHECKED_OUT: "GET_BOOKS_CHECKED_OUT",
@@ -15,7 +15,7 @@ export const getBooks = async (dispatch) => {
 	try {
 		const response = await axios.get("/api/books", setRequestHeaders());
 		dispatch({
-			type: types.GET_BOOKS_ALL,
+			type: actionTypes.GET_BOOKS_ALL,
 			payload: response.data,
 		});
 	} catch (error) {
@@ -31,7 +31,7 @@ export const getAvailableBooks = async (dispatch) => {
 			setRequestHeaders(),
 		);
 		dispatch({
-			type: types.GET_BOOKS_AVAILABLE,
+			type: actionTypes.GET_BOOKS_AVAILABLE,
 			payload: response.data,
 		});
 	} catch (error) {
@@ -47,7 +47,7 @@ export const getCheckedOutBooks = async (dispatch) => {
 			setRequestHeaders(),
 		);
 		dispatch({
-			type: types.GET_BOOKS_CHECKED_OUT,
+			type: actionTypes.GET_BOOKS_CHECKED_OUT,
 			payload: response.data,
 		});
 	} catch (error) {

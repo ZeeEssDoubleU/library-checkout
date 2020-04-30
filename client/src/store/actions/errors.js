@@ -1,4 +1,4 @@
-export const types = {
+export const actionTypes = {
 	CLEAR_ERRORS: "CLEAR_ERRORS",
 	LOG_ERRORS: "LOG_ERRORS",
 };
@@ -6,7 +6,7 @@ export const types = {
 // clear errors
 export const clearErrors = async (dispatch) => {
 	dispatch({
-		type: types.CLEAR_ERRORS,
+		type: actionTypes.CLEAR_ERRORS,
 		payload: null,
 	});
 };
@@ -14,7 +14,7 @@ export const clearErrors = async (dispatch) => {
 // log errors
 export const logErrors = async (errors, dispatch) => {
 	dispatch({
-		type: types.LOG_ERRORS,
+		type: actionTypes.LOG_ERRORS,
 		payload: errors,
 	});
 };
