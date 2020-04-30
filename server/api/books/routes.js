@@ -28,7 +28,11 @@ router.get("/available", getBooks_available);
 // @route - GET api/books/checked-out
 // @desc - get all checked out books
 // @access - private
-router.get("/checked-out", checkAuthenticated, getBooks_checkedOut);
+router.get(
+	"/checked-out",
+	passport.authenticate("jwt", { session: false }),
+	getBooks_checkedOut,
+);
 // router.get("/checked-out", getBooks_checkedOut);
 
 // @route - GET api/books/:id

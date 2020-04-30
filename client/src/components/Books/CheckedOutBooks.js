@@ -4,7 +4,7 @@ import styled from "styled-components";
 // import components
 import Book from "./Book";
 // import store, actions
-import { useStore } from "../../store/useStore.js";
+import useStore from "../../store/useStore.js";
 import { getCheckedOutBooks } from "../../store/actions/books";
 import { useHistory } from "react-router-dom";
 

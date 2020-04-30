@@ -1,6 +1,7 @@
 import axios from "axios";
 // import actions
 import { logErrors } from "./errors";
+import { setRequestHeaders } from "./common";
 
 export const types = {
 	GET_BOOKS_ALL: "GET_BOOKS_ALL",
@@ -12,7 +13,7 @@ export const types = {
 // get all books
 export const getBooks = async (dispatch) => {
 	try {
-		const response = await axios.get("/api/books");
+		const response = await axios.get("/api/books", setRequestHeaders());
 		dispatch({
 			type: types.GET_BOOKS_ALL,
 			payload: response.data,
@@ -25,7 +26,10 @@ export const getBooks = async (dispatch) => {
 // get available books
 export const getAvailableBooks = async (dispatch) => {
 	try {
-		const response = await axios.get("/api/books/available");
+		const response = await axios.get(
+			"/api/books/available",
+			setRequestHeaders(),
+		);
 		dispatch({
 			type: types.GET_BOOKS_AVAILABLE,
 			payload: response.data,
@@ -38,7 +42,10 @@ export const getAvailableBooks = async (dispatch) => {
 // get checked out books
 export const getCheckedOutBooks = async (dispatch) => {
 	try {
-		const response = await axios.get("/api/books/checked-out");
+		const response = await axios.get(
+			"/api/books/checked-out",
+			setRequestHeaders(),
+		);
 		dispatch({
 			type: types.GET_BOOKS_CHECKED_OUT,
 			payload: response.data,

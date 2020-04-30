@@ -8,9 +8,11 @@ import FormGroup from "./FormGroup";
 // import validation
 import validateRegister from "../../validate/register";
 // import actions/store
+import useStore from "../../store/useStore";
 import { registerUser } from "../../store/actions/users";
 
 const Register = (props) => {
+	const { dispatch } = useStore();
 	const history = useHistory();
 	const [formData, setFormData] = useState({
 		first_name: "",
@@ -39,7 +41,7 @@ const Register = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await registerUser(formData, history);
+		const response = await registerUser(formData, history, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,

@@ -53,7 +53,7 @@ passport.use(
 
 // jwt strategy
 const opts = {
-	jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme("JWT"),
+	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 	secretOrKey: process.env.JWT_SECRET,
 };
 passport.use(
@@ -71,7 +71,7 @@ passport.use(
 			} else {
 				return done(null, false, {
 					type: `jwt`,
-					message: `JSON web token not authorized.`,
+					message: `User not authorized.`,
 				});
 			}
 		} catch (err) {

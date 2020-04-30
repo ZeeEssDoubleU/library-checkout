@@ -8,7 +8,7 @@ import FormGroup from "../FormGroup";
 // import validation
 import validateLogin from "../../../validate/login";
 // import actions/store
-import { useStore } from "../../../store/useStore.js";
+import useStore from "../../../store/useStore.js";
 import { loginUser_local } from "../../../store/actions/users";
 
 const Local = (props) => {

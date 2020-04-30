@@ -9,12 +9,14 @@ import * as errorActions from "./actions/errors";
 // reducer
 const reducer = (state, action) => {
 	switch (action.type) {
+		// *** book actions
 		case bookActions.types.GET_BOOKS_ALL:
 			return { ...state, books_all: action.payload };
 		case bookActions.types.GET_BOOKS_AVAILABLE:
 			return { ...state, books_available: action.payload };
 		case bookActions.types.GET_BOOKS_CHECKED_OUT:
 			return { ...state, books_checked_out: action.payload };
+		// *** user actions
 		case userActions.types.GET_USERS:
 			return { ...state, users: action.payload };
 		case userActions.types.GET_USER:
@@ -25,6 +27,7 @@ const reducer = (state, action) => {
 				user_current: action.payload,
 				isAuthenticated: !isEmpty(action.payload),
 			};
+		// *** error actions
 		case errorActions.types.LOG_ERRORS:
 			return { ...state, errors: action.payload };
 		case errorActions.types.CLEAR_ERRORS:
@@ -33,6 +36,9 @@ const reducer = (state, action) => {
 			return state;
 	}
 };
+
+// selectors
+// export const isAuthenticated = !isEmpty(state.user_current);
 
 // initial state
 const initState =
@@ -55,11 +61,25 @@ const StoreContext = createContext();
 
 // component to wrap upper level root component with Provider
 export const StoreProvider = ({ children }) => {
+	// if sessionState available, load session state (previously saved store)
 	const sessionState = JSON.parse(sessionStorage.getItem("sessionState"));
-	const [state, dispatch] = useReducer(reducer, sessionState || initState);
+	// choose starting state (based on presence of sessionState)
+	const startState = sessionState ? sessionState : initState;
+	const [state, dispatch] = useReducer(reducer, {
+		...initState,
+		user_current: startState.user_current,
+		isAuthenticated: startState.isAuthenticated,
+	});
 
+	// save store to sessionStorage
 	useEffect(() => {
-		sessionStorage.setItem("sessionState", JSON.stringify(state));
+		sessionStorage.setItem(
+			"sessionState",
+			JSON.stringify({
+				user_current: state.user_current,
+				isAuthenticated: state.isAuthenticated,
+			}),
+		);
 	}, [state]);
 
 	return (
@@ -69,8 +89,8 @@ export const StoreProvider = ({ children }) => {
 	);
 };
 
-// { useStore } hook.  Acts as Consumer through useContext
-export const useStore = () => {
+// useStore hook.  Acts as Consumer through useContext
+export default () => {
 	const { state, dispatch } = useContext(StoreContext);
 	return { state, dispatch };
 };

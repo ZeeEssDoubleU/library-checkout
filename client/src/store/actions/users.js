@@ -2,6 +2,7 @@ import axios from "axios";
 import jwt_decode from "jwt-decode";
 // import actions
 import { logErrors } from "./errors";
+import { setRequestHeaders } from "./common";
 
 export const types = {
 	GET_USERS: "GET_USERS",
@@ -13,7 +14,7 @@ export const types = {
 // get all users
 export const getUsers = async (dispatch) => {
 	try {
-		const response = await axios.get("/api/users");
+		const response = await axios.get("/api/users", setRequestHeaders());
 		dispatch({
 			type: types.GET_USERS,
 			payload: response.data,
@@ -23,41 +24,52 @@ export const getUsers = async (dispatch) => {
 	}
 };
 
-export const registerUser = async (userData, history) => {
+export const registerUser = async (userData, history, dispatch) => {
 	try {
-		const response = await axios.post("/api/users/register", userData);
+		const response = await axios.post(
+			"/api/users/register",
+			userData,
+			setRequestHeaders(),
+		);
 		// response should only be email (check registerUser controller)
 		console.log(`Success!  Created new user:`, response.data.newUser);
 		// if successful, redirect to login page
 		history.push("/login");
 	} catch (error) {
-		return error.response.data;
+		logErrors(error.response.data, dispatch);
 	}
 };
 
 export const loginUser_local = async (userData, history, dispatch) => {
 	try {
-		const response = await axios.post("/api/users/login-local", userData);
+		const response = await axios.post(
+			"/api/users/login-local",
+			userData,
+			setRequestHeaders(),
+		);
 		dispatch({
 			type: types.SET_CURRENT_USER,
 			payload: response.data,
 		});
 		console.log(`Success!  Logged in as user:`, response.data.email);
+		// TODO reactivate redirect when ready
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
 	} catch (error) {
-		return error.response.data;
+		logErrors(error.response.data, dispatch);
 	}
 };
 
 export const loginUser_jwt = async (userData, history, dispatch) => {
 	try {
-		const response = await axios.post("/api/users/login-jwt", userData);
-		const { email, token } = response.data;
+		const response = await axios.post(
+			"/api/users/login-jwt",
+			userData,
+			setRequestHeaders(),
+		);
+		const { token } = response.data;
 		// store JWT in local storage
 		localStorage.setItem("JWT", token);
-		// add JWT to ALL authorization headers
-		setAuthToken(token);
 
 		// decode JWT to get user data and set login_user state
 		const decoded = jwt_decode(token);
@@ -67,22 +79,50 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 		});
 
 		console.log(`Success!  Logged in as user:`, decoded.email);
+		// TODO reactivate redirect when ready
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
 	} catch (error) {
-		return error.response.data;
+		logErrors(error.response.data, dispatch);
+	}
+};
+
+export const logoutUser = (history, dispatch) => {
+	// remove JWT from localStorage
+	localStorage.removeItem("JWT");
+
+	dispatch({
+		type: types.SET_CURRENT_USER,
+		payload: null,
+	});
+	// redirect to login page
+	if (history.location.pathname !== "/login") {
+		history.push("/login");
 	}
 };
 
 // *************
 // helpers
 // *************
-export const setAuthToken = (token) => {
+
+export const checkUserLoggedIn = (history, dispatch) => {
+	// check if JWT exists in local storage
+	const token = localStorage.JWT ? localStorage.JWT : null;
+
 	if (token) {
-		// if token exists, apply to ALL requests
-		axios.defaults.headers.common["Authorization"] = `JWT ${token}`;
-	} else {
-		// else, delete the authorization header
-		delete axios.defaults.headers.common["Authorization"];
+		// decode JWT to get user data and set login_user state
+		const decoded = jwt_decode(token);
+		dispatch({
+			type: types.SET_CURRENT_USER,
+			payload: decoded,
+		});
+
+		// get currentTime in seconds
+		const currentTime = Date.now() / 1000;
+		// if JWT expired, logout user
+
+		if (currentTime > decoded.exp) {
+			logoutUser(history, dispatch);
+		}
 	}
 };

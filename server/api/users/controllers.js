@@ -21,7 +21,7 @@ export const findUser = async (input) => {
 	return result.rows[0];
 };
 
-// TODO: reviset these middleware for passport local strategy if necessary
+// TODO: revisit these middleware for passport local strategy if necessary
 // *** NOT a fan of local strategy with react
 export const checkAuthenticated = (request, response, next) => {
 	return request.isAuthenticated()
@@ -200,7 +200,7 @@ export const loginUser_jwt = async (request, response) => {
 				jwt.sign(
 					payload,
 					process.env.JWT_SECRET,
-					{ expiresIn: "30m" },
+					{ expiresIn: "10m" },
 					(err, token) => {
 						if (err) {
 							errors.token = `Error creating token: ${err}`;
@@ -208,8 +208,6 @@ export const loginUser_jwt = async (request, response) => {
 						}
 						// return token along with extra data
 						return response.status(200).json({
-							auth: true,
-							email: user.email,
 							token,
 							message: `User found and logged in (token created).`,
 						});

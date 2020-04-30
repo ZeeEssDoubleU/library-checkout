@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export const types = {
 	CLEAR_ERRORS: "CLEAR_ERRORS",
 	LOG_ERRORS: "LOG_ERRORS",
