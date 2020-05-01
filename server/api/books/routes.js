@@ -10,8 +10,6 @@ import {
 	deleteBook,
 } from "./controllers";
 import { checkAuthenticated } from "../users/controllers";
-// import passport config
-import passport from "../../config/passport";
 
 const router = express.Router();
 
@@ -28,11 +26,7 @@ router.get("/available", getBooks_available);
 // @route - GET api/books/checked-out
 // @desc - get all checked out books
 // @access - private
-router.get(
-	"/checked-out",
-	passport.authenticate(["local", "jwt"]),
-	getBooks_checkedOut,
-);
+router.get("/checked-out", checkAuthenticated, getBooks_checkedOut);
 // router.get("/checked-out", getBooks_checkedOut);
 
 // @route - GET api/books/:id

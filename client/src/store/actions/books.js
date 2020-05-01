@@ -19,7 +19,7 @@ export const getBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors(error.response.data.message, dispatch);
 	}
 };
 
@@ -35,7 +35,7 @@ export const getAvailableBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors(error.response.data.message, dispatch);
 	}
 };
 
@@ -51,6 +51,6 @@ export const getCheckedOutBooks = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors(error.response.data.message, dispatch);
 	}
 };

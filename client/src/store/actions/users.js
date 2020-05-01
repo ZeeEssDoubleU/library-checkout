@@ -21,7 +21,7 @@ export const getUsers = async (dispatch) => {
 			payload: response.data,
 		});
 	} catch (error) {
-		logErrors(error.response.data, dispatch);
+		logErrors(error.response.data.message, dispatch);
 	}
 };
 
@@ -33,11 +33,12 @@ export const registerUser = async (userData, history, dispatch) => {
 			setRequestHeaders(),
 		);
 		// response should only be email (check registerUser controller)
-		console.log(`Success!  Created new user:`, response.data.newUser);
 		// if successful, redirect to login page
 		history.push("/login");
+
+		console.log(`Success!  Created new user:`, response.data.newUser);
 	} catch (error) {
-		logErrors({ register: error.response.data }, dispatch);
+		logErrors({ register: error.response.data.message }, dispatch);
 	}
 };
 
@@ -52,12 +53,14 @@ export const loginUser_local = async (userData, history, dispatch) => {
 			type: actionTypes.SET_CURRENT_USER,
 			payload: response.data,
 		});
-		console.log(`Success!  Logged in as user:`, response.data.email);
+
 		// TODO reactivate redirect when ready
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
+
+		console.log(`Success!  Logged in as user:`, response.data.email);
 	} catch (error) {
-		logErrors({ login_local: error.response.data }, dispatch);
+		logErrors({ login_local: error.response.data.message }, dispatch);
 	}
 };
 
@@ -79,30 +82,45 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 			payload: decoded,
 		});
 
-		console.log(`Success!  Logged in as user:`, decoded.email);
 		// TODO reactivate redirect when ready
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
+
+		console.log(`Success!  Logged in as user:`, decoded.email);
 	} catch (error) {
-		logErrors({ login_jwt: error.response.data }, dispatch);
+		logErrors({ login_jwt: error.response.data.message }, dispatch);
 	}
 };
 
-export const logoutUser = (history, dispatch) => {
-	// remove JWT from localStorage
-	localStorage.removeItem("JWT");
+export const logoutUser = async (history, dispatch) => {
+	try {
+		// logout from back-end
+		const response = await axios.get(
+			"/api/users/logout",
+			setRequestHeaders(),
+		);
 
-	dispatch({
-		type: actionTypes_books.GET_BOOKS_CHECKED_OUT,
-		payload: null,
-	});
-	dispatch({
-		type: actionTypes.SET_CURRENT_USER,
-		payload: null,
-	});
-	// redirect to login page
-	if (history.location.pathname !== "/login") {
-		history.push("/login");
+		// remove JWT from localStorage
+		localStorage.removeItem("JWT");
+
+		// logout from front-end and remove checked out books
+		dispatch({
+			type: actionTypes.SET_CURRENT_USER,
+			payload: null,
+		});
+		dispatch({
+			type: actionTypes_books.GET_BOOKS_CHECKED_OUT,
+			payload: null,
+		});
+
+		// redirect to login page
+		if (history.location.pathname !== "/login") {
+			history.push("/login");
+		}
+
+		console.log(response.data.message);
+	} catch (error) {
+		logErrors(error.response.data.message, dispatch);
 	}
 };
 

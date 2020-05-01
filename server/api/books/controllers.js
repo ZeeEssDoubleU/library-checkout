@@ -19,49 +19,49 @@ const books_checked_out = `
    JOIN public.user ON checkouts.user_id = public.user.id`;
 
 // controllers
-export const getBooks = async (request, response) => {
+export const getBooks = async (request, response, next) => {
 	try {
 		const result = await db.query(`${books} ORDER BY book.title ASC`);
 		return response.status(200).json(result.rows);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const getBooks_available = async (request, response) => {
+export const getBooks_available = async (request, response, next) => {
 	try {
 		const result = await db.query(
 			`${books} WHERE book.quantity_available > 0 ORDER BY book.title ASC`,
 		);
 		return response.status(200).json(result.rows);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const getBooks_checkedOut = async (request, response) => {
+export const getBooks_checkedOut = async (request, response, next) => {
 	try {
 		const result = await db.query(
 			`${books_checked_out} ORDER BY book.title ASC`,
 		);
 		return response.status(200).json(result.rows);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const getBook_byId = async (request, response) => {
+export const getBook_byId = async (request, response, next) => {
 	const id = parseInt(request.params.id);
 
 	try {
 		const result = await db.query(`${books} WHERE book.id = $1`, [id]);
 		return response.status(200).json(result.rows);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const postBook = async (request, response) => {
+export const postBook = async (request, response, next) => {
 	const { title, author } = request.body;
 
 	try {
@@ -71,11 +71,11 @@ export const postBook = async (request, response) => {
 		);
 		return response.status(201).json(result.rows[0]);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const updateBook = async (request, response) => {
+export const updateBook = async (request, response, next) => {
 	const id = parseInt(request.params.id);
 	const { title, author } = request.body;
 
@@ -86,11 +86,11 @@ export const updateBook = async (request, response) => {
 		);
 		return response.status(200).json(result.rows[0]);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };
 
-export const deleteBook = async (request, response) => {
+export const deleteBook = async (request, response, next) => {
 	const id = parseInt(request.params.id);
 
 	try {
@@ -100,6 +100,6 @@ export const deleteBook = async (request, response) => {
 		);
 		return response.status(200).send(`Deleted book with ID: ${id}`);
 	} catch (error) {
-		return console.error(error);
+		return next(error);
 	}
 };

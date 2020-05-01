@@ -38,6 +38,17 @@ import users from "./api/users/routes";
 app.use("/api/books", books);
 app.use("/api/users", users);
 
+// custom error handler
+app.use((error, req, res, next) => {
+	const caughtError = {
+		status: error.status || 500,
+		message: error.message || `Internal server error.`,
+		stack: error || null,
+	};
+	console.error(caughtError);
+	res.status(caughtError.status).json(caughtError);
+});
+
 // listen to server and confirm in consoles
 app.listen(PORT, () => {
 	console.log(`Server listening on port ${PORT}.`);
