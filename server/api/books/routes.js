@@ -9,7 +9,7 @@ import {
 	updateBook,
 	deleteBook,
 } from "./controllers";
-import { checkAuthenticated } from "../users/controllers";
+import { checkAuthenticated } from "../auth/controllers";
 
 const router = express.Router();
 

@@ -39,7 +39,7 @@ const Jwt = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await loginUser_jwt(formData, history, dispatch);
+		await loginUser_jwt(formData, history, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,
@@ -49,7 +49,7 @@ const Jwt = (props) => {
 	// if global errors present, show on related ui
 	useEffect(() => {
 		setErrors(state.errors?.login_jwt);
-	}, [state.errors?.login_jwt]);
+	}, [state.errors]);
 
 	return (
 		<Container fluid>

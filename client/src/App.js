@@ -28,27 +28,17 @@ function App() {
 		<>
 			<Nav />
 			<Switch>
-				<Route exact path="/">
-					<Landing />
-				</Route>
-				<Route exact path="/login">
-					<Login />
-				</Route>
-				<Route exact path="/register">
-					<Register />
-				</Route>
-				<Route exact path="/books/all">
-					<AllBooks />
-				</Route>
-				<Route exact path="/books/available">
-					<AvailableBooks />
-				</Route>
-				<PrivateRoute exact path="/books/checked-out">
-					<CheckedOutBooks />
-				</PrivateRoute>
-				<Route exact path="/users">
-					<Users />
-				</Route>
+				<Route exact path="/" component={Landing} />
+				<Route exact path="/login" component={Login} />
+				<Route exact path="/register" component={Register} />
+				<Route exact path="/books/all" component={AllBooks} />
+				<Route exact path="/books/available" component={AvailableBooks} />
+				<Route
+					exact
+					path="/books/checked-out"
+					component={CheckedOutBooks}
+				/>
+				<Route exact path="/users" component={Users} />
 			</Switch>
 		</>
 	);

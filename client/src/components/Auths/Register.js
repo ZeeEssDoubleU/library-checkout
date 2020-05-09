@@ -42,7 +42,7 @@ const Register = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await registerUser(formData, history, dispatch);
+		registerUser(formData, history, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,
@@ -52,7 +52,7 @@ const Register = (props) => {
 	// if global errors present, show on related ui
 	useEffect(() => {
 		setErrors(state.errors?.register);
-	}, [state.errors?.register]);
+	}, [state.errors]);
 
 	return (
 		<Container fluid>

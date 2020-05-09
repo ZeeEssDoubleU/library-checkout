@@ -45,7 +45,7 @@ export const registerUser = async (userData, history, dispatch) => {
 export const loginUser_local = async (userData, history, dispatch) => {
 	try {
 		const response = await axios.post(
-			"/api/users/login-local",
+			"/api/users/login/local",
 			userData,
 			setRequestHeaders(),
 		);
@@ -67,7 +67,7 @@ export const loginUser_local = async (userData, history, dispatch) => {
 export const loginUser_jwt = async (userData, history, dispatch) => {
 	try {
 		const response = await axios.post(
-			"/api/users/login-jwt",
+			"/api/users/login/jwt",
 			userData,
 			setRequestHeaders(),
 		);

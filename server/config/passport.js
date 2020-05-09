@@ -5,6 +5,8 @@ import { findUser } from "../api/users/controllers";
 // import strategies
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { Strategy as FacebookStrategy } from "passport-facebook";
+import { Strategy as OAuth2Strategy } from "passport-oauth2";
 
 // local strategy
 passport.use(
@@ -43,10 +45,10 @@ passport.use(
 						message: `Password is incorrect :(`,
 					});
 				}
-			} catch (err) {
-				return done(err, {
+			} catch (error) {
+				return done(error, {
 					type: `passport`,
-					message: `Passport - local strategy: ${err}`,
+					message: `Passport - local strategy: ${error}`,
 				});
 			}
 		},
@@ -54,52 +56,77 @@ passport.use(
 );
 
 // jwt strategy
-const opts = {
-	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-	secretOrKey: process.env.JWT_SECRET,
-};
 passport.use(
-	new JwtStrategy(opts, async (jwt_payload, done) => {
-		try {
-			// find user
-			const user = await findUser({ id: jwt_payload.id });
+	new JwtStrategy(
+		{
+			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			secretOrKey: process.env.JWT_SECRET,
+		},
+		async (jwt_payload, done) => {
+			try {
+				// find user
+				const user = await findUser({ id: jwt_payload.id });
 
-			// if user, return user
-			if (user) {
-				// add auth type to user
+				// if no user, return 'not authorized'
+				if (!user) {
+					return done(null, false, {
+						type: `jwt`,
+						message: `User not authorized.`,
+					});
+				}
+
+				// if user found, add auth type to user and return user
 				user.auth = "jwt";
 				return done(null, user, {
 					type: `success`,
 					message: `User confirmed.`,
 				});
-			} else {
-				return done(null, false, {
-					type: `jwt`,
-					message: `User not authorized.`,
+			} catch (error) {
+				return done(error, {
+					type: `passport`,
+					message: `Passport - jwt strategy: ${error}`,
 				});
 			}
-		} catch (err) {
-			return done(err, {
-				type: `passport`,
-				message: `Passport - jwt strategy: ${err}`,
-			});
-		}
-	}),
+		},
+	),
+);
+
+// facebook oauth2
+passport.use(
+	new FacebookStrategy(
+		{
+			clientID: process.env.FACEBOOK_APP_ID,
+			clientSecret: process.env.FACEBOOK_APP_SECRET,
+			callbackURL: process.env.FACEBOOK_APP_CALLBACK,
+			profileFields: ["id", "first_name", "last_name", "email"],
+		},
+		async (accessToken, refreshToken, profile, done) => {
+			try {
+				return done(null, profile._json);
+			} catch (error) {
+				return done(error, {
+					type: `passport`,
+					message: `Passport - oauth2 facebook: ${error}`,
+				});
+			}
+		},
+	),
 );
 
 // serialize/deserialize user
 passport.serializeUser((user, done) => {
-	return done(null, user.id);
+	return done(null, user.email);
 });
 
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (email, done) => {
 	try {
+		console.log("deserialize:", email);
 		// find user
-		const user = await findUser({ id });
+		const user = await findUser({ email });
 		return done(null, user);
-	} catch (err) {
-		console.error(`Error when selecting user on session deserialize`, err);
-		return done(err);
+	} catch (error) {
+		console.error(`Error when selecting user on session deserialize`, error);
+		return done(error);
 	}
 });
 

@@ -39,7 +39,7 @@ const Local = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		const response = await loginUser_local(formData, history, dispatch);
+		loginUser_local(formData, history, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,
@@ -49,7 +49,7 @@ const Local = (props) => {
 	// if global errors present, show on related ui
 	useEffect(() => {
 		setErrors(state.errors?.login_local);
-	}, [state.errors?.login_local]);
+	}, [state.errors]);
 
 	return (
 		<Container fluid>

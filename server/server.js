@@ -4,7 +4,7 @@ import cors from "cors";
 // session related imports
 import flash from "express-flash";
 import session from "express-session";
-import passport from "passport";
+import passport from "./config/passport";
 
 const app = express();
 const { PORT = 5000, SESSION_SECRET } = process.env;
@@ -33,10 +33,12 @@ app.route("/").get((req, res) => {
 });
 
 // import and use routes
-import books from "./api/books/routes";
-import users from "./api/users/routes";
-app.use("/api/books", books);
-app.use("/api/users", users);
+import routes_auth from "./api/auth/routes";
+import routes_users from "./api/users/routes";
+import routes_books from "./api/books/routes";
+app.use("/api/auth", routes_auth);
+app.use("/api/users", routes_users);
+app.use("/api/books", routes_books);
 
 // custom error handler
 app.use((error, req, res, next) => {
