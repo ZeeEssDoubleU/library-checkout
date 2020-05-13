@@ -42,15 +42,31 @@ export const getUser_byId = async (req, res, next) => {
 	const id = parseInt(req.params.id);
 
 	try {
-		const result = await db.query(`SELECT * FROM public.user WHERE id = $1`, [
-			id,
-		]);
-		return res.status(200).json(result.rows);
+		// findUser helper above
+		const result = await findUser({ id });
+		return res.status(200).json(result);
 	} catch (error) {
 		return next({
 			status: 404,
 			message: `User not found.`,
 			stack: error.stack,
+		});
+	}
+};
+
+export const getUser_current = (req, res, next) => {
+	// if jwt cookie found, return cookie and log user into client
+	if (req.cookies && req.cookies.jwt) {
+		return res.status(200).json({
+			jwt: req.cookies.jwt,
+			message: `JWT cookie found and user logged into client.`,
+		});
+		// else, return error
+	} else {
+		return next({
+			status: 401,
+			message: `JWT cookie NOT found.`,
+			stack: new Error(),
 		});
 	}
 };

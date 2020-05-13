@@ -1,10 +1,15 @@
 // @ts-nocheck
 import React, { createContext, useReducer, useContext, useEffect } from "react";
 import isEmpty from "lodash/fp/isEmpty";
+import axios from "axios";
 // import action types
 import { actionTypes as actionTypes_books } from "./actions/books";
-import { actionTypes as actionTypes_users } from "./actions/users";
-import { actionTypes as actionTypes_errors } from "./actions/errors";
+import {
+	actionTypes as actionTypes_users,
+	getCurrentUser,
+} from "./actions/users";
+import { actionTypes as actionTypes_errors, logErrors } from "./actions/errors";
+import { getUser_current } from "./actions/users";
 
 // reducer
 const reducer = (state, action) => {
@@ -43,9 +48,6 @@ const reducer = (state, action) => {
 	}
 };
 
-// selectors
-// export const isAuthenticated = !isEmpty(state.user_current);
-
 // initial state
 const initState =
 	typeof window !== "undefined"
@@ -59,6 +61,7 @@ const initState =
 				user_current: null,
 				isAuthenticated: false,
 				errors: null,
+				getCurrentUser: false,
 		  }
 		: {}; // fallback to {} so that sub states don't return null
 
@@ -75,6 +78,7 @@ export const StoreProvider = ({ children }) => {
 		...initState,
 		user_current: startState.user_current,
 		isAuthenticated: startState.isAuthenticated,
+		getCurrentUser: startState.getCurrentUser,
 	});
 
 	// save store to sessionStorage
@@ -84,6 +88,7 @@ export const StoreProvider = ({ children }) => {
 			JSON.stringify({
 				user_current: state.user_current,
 				isAuthenticated: state.isAuthenticated,
+				getCurrentUser: state.getCurrentUser,
 			}),
 		);
 	}, [state]);

@@ -3,7 +3,7 @@ import { Navbar, NavbarBrand, Nav, NavItem, NavLink } from "reactstrap";
 import { useHistory } from "react-router-dom";
 // import store / actions
 import useStore from "../store/useStore";
-import { logoutUser } from "../store/actions/users";
+import { logoutUser } from "../store/actions/auth";
 
 const Navigation = (props) => {
 	const { state, dispatch } = useStore();

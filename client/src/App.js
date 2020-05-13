@@ -12,7 +12,8 @@ import Users from "./components/Users/Users.js";
 import PrivateRoute from "./components/Auths/PrivateRoute";
 // import store/actions
 import useStore from "./store/useStore";
-import { checkUserLoggedIn } from "./store/actions/users";
+import { checkUserLoggedIn } from "./store/actions/auth";
+import OAuthCallback from "./components/Auths/OAuthCallback";
 
 function App() {
 	const { dispatch } = useStore();
@@ -33,12 +34,14 @@ function App() {
 				<Route exact path="/register" component={Register} />
 				<Route exact path="/books/all" component={AllBooks} />
 				<Route exact path="/books/available" component={AvailableBooks} />
-				<Route
+				<PrivateRoute
 					exact
 					path="/books/checked-out"
 					component={CheckedOutBooks}
 				/>
 				<Route exact path="/users" component={Users} />
+				{/* for facebook authorization */}
+				<Route exact path="/oauth/callback" component={OAuthCallback} />
 			</Switch>
 		</>
 	);

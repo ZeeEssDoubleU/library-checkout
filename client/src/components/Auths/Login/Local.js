@@ -9,7 +9,7 @@ import FormGroup from "../FormGroup";
 import validateLogin from "../../../validate/login";
 // import actions/store
 import useStore from "../../../store/useStore.js";
-import { loginUser_local } from "../../../store/actions/users";
+import { loginUser_local } from "../../../store/actions/auth";
 import { logErrors } from "../../../store/actions/errors";
 
 const Local = (props) => {
@@ -53,7 +53,7 @@ const Local = (props) => {
 
 	return (
 		<Container fluid>
-			<StyledCard>
+			<Card_Styled>
 				<CardHeader>Login Local</CardHeader>
 				<Form onSubmit={onSubmit} noValidate>
 					<FormGroup
@@ -77,15 +77,15 @@ const Local = (props) => {
 						submitted={formData.submitted}
 					/>
 					<ButtonGroup>
-						<StyledButton color="success" type="submit">
+						<Button_Styled color="success" type="submit">
 							Login
-						</StyledButton>
-						<StyledButton color="primary" href="/register">
+						</Button_Styled>
+						<Button_Styled color="primary" href="/register">
 							Register
-						</StyledButton>
+						</Button_Styled>
 					</ButtonGroup>
 				</Form>
-			</StyledCard>
+			</Card_Styled>
 		</Container>
 	);
 };
@@ -94,12 +94,12 @@ Local.propTypes = {};
 
 export default Local;
 
-const StyledCard = styled(Card)`
+const Card_Styled = styled(Card)`
 	margin: 2rem;
 `;
 const ButtonGroup = styled.div`
 	margin: 1em;
 `;
-const StyledButton = styled(Button)`
+const Button_Styled = styled(Button)`
 	margin-right: 1em;
 `;

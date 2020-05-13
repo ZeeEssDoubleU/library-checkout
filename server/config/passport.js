@@ -65,7 +65,7 @@ passport.use(
 		async (jwt_payload, done) => {
 			try {
 				// find user
-				const user = await findUser({ id: jwt_payload.id });
+				const user = await findUser({ email: jwt_payload.email });
 
 				// if no user, return 'not authorized'
 				if (!user) {
@@ -102,6 +102,8 @@ passport.use(
 		},
 		async (accessToken, refreshToken, profile, done) => {
 			try {
+				// if user found, add auth type to user and return user
+				profile._json.auth = "facebook";
 				return done(null, profile._json);
 			} catch (error) {
 				return done(error, {
@@ -113,16 +115,20 @@ passport.use(
 	),
 );
 
-// serialize/deserialize user
+// stores desired value into session (email in this case)
+// uses value to lookup and login user below
 passport.serializeUser((user, done) => {
 	return done(null, user.email);
 });
 
+// 'logs' user into session
 passport.deserializeUser(async (email, done) => {
 	try {
-		console.log("deserialize:", email);
 		// find user
 		const user = await findUser({ email });
+		// remove user password so it's not stored in session
+		delete user.password;
+
 		return done(null, user);
 	} catch (error) {
 		console.error(`Error when selecting user on session deserialize`, error);

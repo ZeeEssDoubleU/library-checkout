@@ -14,8 +14,6 @@ import { findUser } from "../users/controllers";
 // helpers
 // *************
 export const checkAuthenticated = (req, res, next) => {
-	console.log("SESSION:", req.session);
-
 	// if user authenticated (from local strat), move on
 	if (req.isAuthenticated() === true) {
 		return next();
@@ -176,8 +174,8 @@ export const loginUser_jwt = async (req, res, next) => {
 
 	try {
 		const { email, password } = req.body;
-		// find user (use this because of exports)
-		const user = await this.findUser({ email });
+		// find user
+		const user = await findUser({ email });
 
 		// if no email (user) found, send error
 		if (!user) {
@@ -217,7 +215,6 @@ export const loginUser_jwt = async (req, res, next) => {
 				);
 			} else {
 				errors.password = `Password is incorrect :(`;
-				return res.status(401).json(errors);
 				return next({
 					status: 401,
 					message: errors,
@@ -230,11 +227,34 @@ export const loginUser_jwt = async (req, res, next) => {
 	}
 };
 
-export const loginUser_oAuth2_facebook = (req, res, next) => {
-	console.log("facebook auth");
+export const loginUser_facebook_callback = async (req, res, next) => {
+	// profile fields returned from passport facebook strategy
+	// password has been removed in deserialize
+	const payload = req.user;
+
+	// create jwt
+	const token = await jwt.sign(payload, process.env.JWT_SECRET, {
+		expiresIn: "10m",
+	});
+
+	res.cookie("jwt", token, { httpOnly: true });
+	res.redirect("http://localhost:3000/oauth/callback");
 };
 
-export const logoutUser = (req, res) => {
-	req.logout();
-	return res.status(200).json({ message: `User logged out.` });
+export const logoutUser = (req, res, next) => {
+	if (req.cookies.jwt) {
+		res.clearCookie("jwt");
+		console.log("JWT cleared from cookies.");
+	}
+
+	if (req.user) {
+		req.logout();
+		return res
+			.status(200)
+			.json({ message: `User logged out from session (back end).` });
+	}
+
+	return res
+		.status(200)
+		.json({ message: `No user logged into session (back end).` });
 };

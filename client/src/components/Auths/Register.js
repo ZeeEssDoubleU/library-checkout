@@ -9,7 +9,7 @@ import FormGroup from "./FormGroup";
 import validateRegister from "../../validate/register";
 // import actions/store
 import useStore from "../../store/useStore";
-import { registerUser } from "../../store/actions/users";
+import { registerUser } from "../../store/actions/auth";
 import { logErrors } from "../../store/actions/errors";
 
 const Register = (props) => {
