@@ -1,9 +1,28 @@
-GET http://localhost:5000/api/users
+GET http://localhost:3000/api/users
+
 ###
 
-GET http://localhost:5000/api/users/auth/facebook/
-# Content-Type: application/json
+GET http://localhost:3000/api/auth/facebook
 
-# {
-#    "access_token": "EAAJLtPu1nFQBAGBM4wHzTY692rY6VrWKLWrYsLzGY3sguNGy8Itv1sjNGAKvSJBBDQusjdKJZCGbxvZBneCTBfkiH51m09LMkiuBbPeDnrfC0CDoftIsUg8ojCqdZATwXP1M0PnbLxYm3r1ZCoT3ORO5CuoRiTQZD"
-# }
+###
+
+POST http://localhost:3000/api/auth/register
+content-type: application/json
+
+{
+   "first_name": "mother",
+   "last_name": "",
+   "email": "sammy@gmail.com",
+   "password": "thingthing",
+   "password_confirm": "thingthing"
+}
+
+###
+
+POST http://localhost:3000/api/auth/login/jwt
+content-type: application/json
+
+{
+   "email": "agentsmith@thematrix.com",
+   "password": "password"
+}

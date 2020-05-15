@@ -12,7 +12,12 @@ const { PORT = 5000, SESSION_SECRET } = process.env;
 
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
-server.use(cors());
+// when using cookies on back-end origin needs to be specified (see below)
+server.use(
+	cors({
+		origin: ["http://localhost:3000", "http://localhost:5000"],
+	}),
+);
 // set up session
 server.use(flash()); // required to flash messages from passport.js
 server.use(
@@ -21,11 +26,11 @@ server.use(
 		resave: false,
 		saveUninitialized: false,
 	}),
-); // required for passport sessions
+); // required for passport sessions (using jwt, shouldn't need)
 server.use(cookieParser());
 // initialize session
 server.use(passport.initialize());
-server.use(passport.session());
+server.use(passport.session()); // using jwt, shouldn't need
 
 // import and use routes
 import routes_auth from "./api/auth/routes";

@@ -20,6 +20,16 @@ export const findUser = async (input) => {
 	return result.rows[0];
 };
 
+export const createUser = async (input) => {
+	const { first_name, last_name, email, password = null } = input;
+
+	const result = await db.query(
+		`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
+		[capitalize(first_name), capitalize(last_name), email, password],
+	);
+	return result.rows[0];
+};
+
 // *************
 // controllers
 // *************

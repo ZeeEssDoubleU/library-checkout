@@ -35,7 +35,7 @@ export const getUser_current = async (history, dispatch) => {
 		const { jwt } = response.data;
 
 		// store JWT in local storage
-		localStorage.setItem("JWT", jwt);
+		localStorage.setItem("jwt", jwt);
 
 		// decode JWT to get user data and set user_current state
 		const decoded = jwt_decode(jwt);

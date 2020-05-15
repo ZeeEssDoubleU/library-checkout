@@ -8,13 +8,13 @@ import validateLogin from "../../../client/src/validate/login";
 // import passport config
 import passport from "../../config/passport";
 // import helpers
-import { findUser } from "../users/controllers";
+import { createUser, findUser } from "../users/controllers";
 
 // *************
 // helpers
 // *************
 export const checkAuthenticated = (req, res, next) => {
-	// if user authenticated (from local strat), move on
+	// if user authenticated (from local strat), move on // ! deprecated: local login (keeping in place anyways)
 	if (req.isAuthenticated() === true) {
 		return next();
 	} else {
@@ -39,10 +39,34 @@ export const checkAuthenticated = (req, res, next) => {
 	}
 };
 
+// TODO: figure out where to use this
 export const checkLoggedIn = (req, res, next) => {
 	return req.isAuthenticated()
 		? res.json(`WHAT!!! Already logged in!!!`)
 		: next();
+};
+
+// TODO: FIX TOKEN ISSUES !!!!! RES, COOKIES, ETC.
+export const generateToken_refresh = async (res, payload) => {
+	// create jwt
+	const token = await jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+		expiresIn: "30d", // 30 days
+	});
+
+	res.cookie("jwt_refresh", token, { httpOnly: true, secure: false });
+	console.log("Refresh token created.");
+	return token;
+};
+
+export const generateToken_access = async (res, payload, loginMethod) => {
+	// create jwt
+	const token = await jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+		expiresIn: "10m", // 10 minutes
+	});
+
+	res.cookie("jwt_access", token, { httpOnly: true, secure: false });
+	console.log("Access token created.");
+	return token;
 };
 
 // *************
@@ -64,7 +88,7 @@ export const registerUser = async (req, res, next) => {
 	try {
 		const { first_name, last_name, email, password } = req.body;
 		// find user
-		const user = await this.findUser({ email });
+		const user = await findUser({ email });
 
 		// if user already registered, send error
 		if (user) {
@@ -85,19 +109,9 @@ export const registerUser = async (req, res, next) => {
 				// hash password
 				newUser.password = await hash;
 
-				// create new user in database
-				const result = await db.query(
-					`INSERT INTO public.user (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING *`,
-					[
-						capitalize(newUser.first_name),
-						capitalize(newUser.last_name),
-						newUser.email,
-						newUser.password,
-					],
-				);
+				// create new user in database and return as registered
+				const registeredUser = await createUser(newUser);
 
-				// return and respond with registered user
-				const registeredUser = result.rows[0];
 				// remove registered users password from response
 				delete registeredUser.password;
 				// return registered user to client
@@ -112,52 +126,56 @@ export const registerUser = async (req, res, next) => {
 	}
 };
 
-export const loginUser_local = async (req, res, next) => {
-	const { errors, isValid } = validateLogin(req.body);
+// ! deprecated: local login
+// export const loginUser_local = async (req, res, next) => {
+// 	const { errors, isValid } = validateLogin(req.body);
 
-	// if request not valid, return errors
-	if (!isValid) {
-		return next({
-			status: 422,
-			message: errors,
-			stack: new Error(`Check login validator.`),
-		});
-	}
+// 	// if request not valid, return errors
+// 	if (!isValid) {
+// 		return next({
+// 			status: 422,
+// 			message: errors,
+// 			stack: new Error(`Check login validator.`),
+// 		});
+// 	}
 
-	passport.authenticate("local", (err, user, info) => {
-		if (err) return next(err);
+// 	passport.authenticate("local", (err, user, info) => {
+// 		if (err) return next(err);
 
-		// if no user
-		if (!user) {
-			// email error returned
-			if (info.type === `email`) {
-				errors.email = info.message;
-				return next({
-					status: 401,
-					message: errors,
-					stack: new Error(errors.email),
-				});
-			}
-			// password error returned
-			if (info.type === `password`) {
-				errors.password = info.message;
-				return next({
-					status: 401,
-					message: errors,
-					stack: new Error(errors.password),
-				});
-			}
-		}
+// 		// if no user
+// 		if (!user) {
+// 			// email error returned
+// 			if (info.type === `email`) {
+// 				errors.email = info.message;
+// 				return next({
+// 					status: 401,
+// 					message: errors,
+// 					stack: new Error(errors.email),
+// 				});
+// 			}
+// 			// password error returned
+// 			if (info.type === `password`) {
+// 				errors.password = info.message;
+// 				return next({
+// 					status: 401,
+// 					message: errors,
+// 					stack: new Error(errors.password),
+// 				});
+// 			}
+// 		}
 
-		// if user, login user
-		req.login(user, (err) => {
-			if (err) return next(err);
+// 		// add auth type to user before logging in
+// 		user.auth = "local";
 
-			console.log(`Success!  Password is correct :D`);
-			return res.status(200).json(user);
-		});
-	})(req, res, next);
-};
+// 		// if user, login user
+// 		req.login(user, (err) => {
+// 			if (err) return next(err);
+
+// 			console.log(`Success!  Password is correct :D`);
+// 			return res.status(200).json(user);
+// 		});
+// 	})(req, res, next);
+// };
 
 export const loginUser_jwt = async (req, res, next) => {
 	// validate request
@@ -186,33 +204,38 @@ export const loginUser_jwt = async (req, res, next) => {
 				stack: new Error(errors.email),
 			});
 		} else {
+			// if user does NOT have password in database
+			if (!user.password) {
+				// TODO: need more elegant solution for this
+				// have prompt to ask user if they would like to create password
+				// have user enter password and password confirmation
+				errors.password =
+					"User does not have password.  Account created through a social network login button above (Facebook, Google, etc).  Please login with social network button.";
+				return next({
+					status: 401,
+					message: errors,
+					stack: new Error(errors.password),
+				});
+			}
+
 			// compare passwords
 			const match = await bcrypt.compare(password, user.password);
 			if (match) {
 				console.log(`Success!  Password is correct :D`);
 
-				const payload = {
-					id: user.id,
-					email: user.email,
-					firstName: user.first_name,
-					lastName: user.last_name,
-				};
+				// add auth type and delete sensitive data before logging in
+				user.auth = "jwt";
+				await delete user.password;
+				await delete user.refresh_token;
 
-				// create jwt
-				jwt.sign(
-					payload,
-					process.env.JWT_SECRET,
-					{ expiresIn: "10m" },
-					(err, token) => {
-						if (err) return next(err);
+				// generate tokens
+				generateToken_refresh(res, user);
+				const token = generateToken_access(res, user);
 
-						// return token along with extra data
-						return res.status(200).json({
-							token,
-							message: `User found and logged in (token created).`,
-						});
-					},
-				);
+				return res.status(200).json({
+					token,
+					message: `User found and logged in (token created).`,
+				});
 			} else {
 				errors.password = `Password is incorrect :(`;
 				return next({
@@ -230,17 +253,31 @@ export const loginUser_jwt = async (req, res, next) => {
 export const loginUser_facebook_callback = async (req, res, next) => {
 	// profile fields returned from passport facebook strategy
 	// password has been removed in deserialize
-	const payload = req.user;
+	const user = req.user;
 
-	// create jwt
-	const token = await jwt.sign(payload, process.env.JWT_SECRET, {
-		expiresIn: "10m",
-	});
+	// add auth type and delete sensitive data before logging in
+	user.auth = "facebook";
+	await delete user.password;
+	await delete user.refresh_token;
 
-	res.cookie("jwt", token, { httpOnly: true });
+	// generate tokens
+	generateToken_refresh(res, user);
+	generateToken_access(res, user);
+
 	res.redirect("http://localhost:3000/oauth/callback");
 };
 
+// TODO: new login steps
+// 1 -	generate access_token
+// 2 - 	generate refresh_token
+// 3 - 	set refresh_token as http only cookie
+// 4 - 	return access_token and access_token_expiry in json payload
+// 5 -	store access_token in memory
+// 6 -	start countdown for silent refresh based on access_token_expiry
+// 7 -	hit /token/refresh endpoint to issue new access_token and access_token_expiry
+// 8 - 	repeat from step 4 as long as necessary
+
+// TODO: fix logout to remove AND invalidate access and refresh tokens
 export const logoutUser = (req, res, next) => {
 	if (req.cookies.jwt) {
 		res.clearCookie("jwt");
@@ -248,6 +285,7 @@ export const logoutUser = (req, res, next) => {
 	}
 
 	if (req.user) {
+		// needed if user logged into session (jwts are used in this instance, not sessions)
 		req.logout();
 		return res
 			.status(200)

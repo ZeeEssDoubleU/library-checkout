@@ -14,6 +14,15 @@ const Navigation = (props) => {
 		logoutUser(history, dispatch);
 	};
 
+	// allows logging out across all open tabs
+	const syncLogout = (event) => {
+		if (localStorage.logout) {
+			history.push("/login");
+			localStorage.removeItem("logout");
+		}
+	};
+	window.addEventListener("storage", syncLogout); // listen to localstorage
+
 	return (
 		<Navbar color="light" light>
 			<NavbarBrand href="/">Library Checkout</NavbarBrand>

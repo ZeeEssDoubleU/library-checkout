@@ -2,14 +2,14 @@ import express from "express";
 // import controllers
 import {
 	registerUser,
-	loginUser_local,
+	// loginUser_local, // ! deprecated: local login
 	loginUser_jwt,
 	loginUser_facebook_callback,
 	logoutUser,
+	generateToken_refresh,
 } from "./controllers";
 // import passport
 import passport from "../../config/passport";
-import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -21,12 +21,11 @@ router.post("/register", registerUser);
 // @route - POST api/auth/login/type
 // @desc - login user
 // @access - public
-router.post("/login/local", loginUser_local);
-
 router.post("/login/jwt", loginUser_jwt);
 
-router.get("/login/facebook", passport.authenticate("facebook"));
+// router.post("/login/local", loginUser_local); // ! deprecated: local login
 
+router.get("/login/facebook", passport.authenticate("facebook"));
 router.get(
 	"/login/facebook/callback",
 	passport.authenticate("facebook", {
@@ -35,6 +34,11 @@ router.get(
 	}),
 	loginUser_facebook_callback,
 );
+
+// @route - GET api/auth/token/refresh
+// @desc - refresh access token
+// @access - public
+router.get("/token/refresh", generateToken_refresh);
 
 // @route - GET api/auth
 // @desc - get all users

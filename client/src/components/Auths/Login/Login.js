@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { Button, Card, CardHeader, Container } from "reactstrap";
 import axios from "axios";
 // import components
-import Local from "./Local";
 import Jwt from "./Jwt";
+// import Local from "./Local - deprecated"; // ! deprecated: local login
 // import store / actions
 import useStore from "../../../store/useStore";
 import { getUser_current } from "../../../store/actions/users";
@@ -31,7 +31,7 @@ const Login = (props) => {
 				</Card_Styled>
 			</Container>
 			<Jwt />
-			{/* <Local /> */}
+			{/* <Local /> // ! deprecated: local login */}
 		</>
 	);
 };

@@ -27,27 +27,28 @@ export const registerUser = async (userData, history, dispatch) => {
 	}
 };
 
-export const loginUser_local = async (userData, history, dispatch) => {
-	try {
-		const response = await axios.post(
-			"/api/auth/login/local",
-			userData,
-			setRequestHeaders(),
-		);
-		dispatch({
-			type: actionTypes_users.SET_CURRENT_USER,
-			payload: response.data,
-		});
+// ! deprecated: local login
+// export const loginUser_local = async (userData, history, dispatch) => {
+// 	try {
+// 		const response = await axios.post(
+// 			"/api/auth/login/local",
+// 			userData,
+// 			setRequestHeaders(),
+// 		);
+// 		dispatch({
+// 			type: actionTypes_users.SET_CURRENT_USER,
+// 			payload: response.data,
+// 		});
 
-		// TODO reactivate redirect when ready
-		// // if successful, redirect to checked-out page
-		// history.push("/books/checked-out");
+// 		// TODO reactivate redirect when ready
+// 		// // if successful, redirect to checked-out page
+// 		// history.push("/books/checked-out");
 
-		console.log(`Success!  Logged in as user:`, response.data.email);
-	} catch (error) {
-		logErrors({ login_local: error.response.data.message }, dispatch);
-	}
-};
+// 		console.log(`Success!  Logged in as user:`, response.data.email);
+// 	} catch (error) {
+// 		logErrors({ login_local: error.response.data.message }, dispatch);
+// 	}
+// };
 
 export const loginUser_jwt = async (userData, history, dispatch) => {
 	try {
@@ -58,7 +59,7 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 		);
 		const { token } = response.data;
 		// store JWT in local storage
-		localStorage.setItem("JWT", token);
+		localStorage.setItem("jwt", token);
 
 		// decode JWT to get user data and set login_user state
 		const decoded = jwt_decode(token);
@@ -79,7 +80,7 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 
 export const checkUserLoggedIn = (history, dispatch) => {
 	// check if JWT exists in local storage
-	const token = localStorage.JWT ? localStorage.JWT : null;
+	const token = localStorage.jwt ? localStorage.jwt : null;
 
 	if (token) {
 		// decode JWT to get user data and set user_current state
@@ -122,6 +123,9 @@ export const logoutFrontend = (history, dispatch) => {
 	if (history.location.pathname !== "/login") {
 		history.push("/login");
 	}
+
+	// to support logging out from all windows
+	window.localStorage.setItem("logout", Date.now());
 
 	console.log("User logged out from client (front end).");
 };

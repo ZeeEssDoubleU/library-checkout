@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { createContext, useReducer, useContext, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect } from "react";
 import isEmpty from "lodash/fp/isEmpty";
 import axios from "axios";
 // import action types
@@ -61,7 +61,6 @@ const initState =
 				user_current: null,
 				isAuthenticated: false,
 				errors: null,
-				getCurrentUser: false,
 		  }
 		: {}; // fallback to {} so that sub states don't return null
 
@@ -70,25 +69,24 @@ const StoreContext = createContext();
 
 // component to wrap upper level root component with Provider
 export const StoreProvider = ({ children }) => {
-	// if sessionState available, load session state (previously saved store)
-	const sessionState = JSON.parse(sessionStorage.getItem("sessionState"));
-	// choose starting state (based on presence of sessionState)
-	const startState = sessionState ? sessionState : initState;
+	// if persistedState available, load session state (previously saved store)
+	const persistedState = JSON.parse(localStorage.getItem("persistedState"));
+	// choose starting state (based on presence of persistedState)
+	const startState = persistedState || initState;
+
 	const [state, dispatch] = useReducer(reducer, {
 		...initState,
 		user_current: startState.user_current,
 		isAuthenticated: startState.isAuthenticated,
-		getCurrentUser: startState.getCurrentUser,
 	});
 
-	// save store to sessionStorage
+	// save store to localStorage
 	useEffect(() => {
-		sessionStorage.setItem(
-			"sessionState",
+		localStorage.setItem(
+			"persistedState",
 			JSON.stringify({
 				user_current: state.user_current,
 				isAuthenticated: state.isAuthenticated,
-				getCurrentUser: state.getCurrentUser,
 			}),
 		);
 	}, [state]);

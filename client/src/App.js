@@ -34,7 +34,7 @@ function App() {
 				<Route exact path="/register" component={Register} />
 				<Route exact path="/books/all" component={AllBooks} />
 				<Route exact path="/books/available" component={AvailableBooks} />
-				<PrivateRoute
+				<Route
 					exact
 					path="/books/checked-out"
 					component={CheckedOutBooks}
