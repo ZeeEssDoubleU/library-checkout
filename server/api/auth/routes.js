@@ -6,7 +6,8 @@ import {
 	loginUser_jwt,
 	loginUser_facebook_callback,
 	logoutUser,
-	generateToken_refresh,
+	refreshToken_generate,
+	accessToken_generate,
 } from "./controllers";
 // import passport
 import passport from "../../config/passport";
@@ -38,9 +39,11 @@ router.get(
 // @route - GET api/auth/token/refresh
 // @desc - refresh access token
 // @access - public
-router.get("/token/refresh", generateToken_refresh);
+// router.post("/refresh-token/generate", refreshToken_generate);
+// router.post("/access-token/generate", accessToken_generate);
+// router.post("/access-token/refresh", accessToken_refresh);
 
-// @route - GET api/auth
+// @route - GET api/auth/logout
 // @desc - get all users
 // @access - public
 router.get("/logout", logoutUser);

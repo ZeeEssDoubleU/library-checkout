@@ -30,6 +30,16 @@ export const createUser = async (input) => {
 	return result.rows[0];
 };
 
+export const updateUser_refreshToken = async (input) => {
+	const { refresh_token, email } = input;
+
+	const result = await db.query(
+		`UPDATE public.user SET refresh_token = $1 where email = $2 RETURNING *`,
+		[refresh_token, email],
+	);
+	return result.rows[0];
+};
+
 // *************
 // controllers
 // *************
@@ -66,10 +76,10 @@ export const getUser_byId = async (req, res, next) => {
 
 export const getUser_current = (req, res, next) => {
 	// if jwt cookie found, return cookie and log user into client
-	if (req.cookies && req.cookies.jwt) {
+	if (req.cookies && req.cookies.jwt_access) {
 		return res.status(200).json({
-			jwt: req.cookies.jwt,
-			message: `JWT cookie found and user logged into client.`,
+			jwt_access: req.cookies.jwt_access,
+			message: `jwt_access cookie found and user logged into client.`,
 		});
 		// else, return error
 	} else {

@@ -55,9 +55,80 @@ import { Strategy as OAuth2Strategy } from "passport-oauth2";
 // 	),
 // );
 
-// jwt strategy
+// jwt_access strategy
 passport.use(
 	new JwtStrategy(
+		"jwt_access",
+		{
+			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			secretOrKey: process.env.JWT_ACCESS_SECRET,
+		},
+		async (jwt_payload, done) => {
+			try {
+				// check to see if user exists in database
+				// ? may not really need this check
+				const user = await findUser({ email: jwt_payload.email });
+
+				if (!user) {
+					return done(null, false, {
+						type: `jwt_access`,
+						message: `User NOT found in database.`,
+					});
+				}
+
+				return done(null, user);
+			} catch (error) {
+				return done(error, {
+					type: `passport`,
+					message: `Passport - jwt_access strategy: ${error}`,
+				});
+			}
+		},
+	),
+);
+
+// jwt_refesh strategy
+const extract_jwt_refresh = (req) => {
+	return req.cookies && req.cookies.jwt_refresh
+		? req.cookies.jwt_refresh
+		: null;
+};
+
+passport.use(
+	new JwtStrategy(
+		"jwt_refresh",
+		{
+			jwtFromRequest: extract_jwt_refresh,
+			secretOrKey: process.env.JWT_REFRESH_SECRET,
+		},
+		async (jwt_payload, done) => {
+			try {
+				// check to see if user exists in database
+				// ? may not really need this check
+				const user = await findUser({ email: jwt_payload.email });
+
+				if (!user) {
+					return done(null, false, {
+						type: `jwt_refresh`,
+						message: `User NOT found in database.`,
+					});
+				}
+
+				return done(null, user);
+			} catch (error) {
+				return done(error, {
+					type: `passport`,
+					message: `Passport - jwt strategy: ${error}`,
+				});
+			}
+		},
+	),
+);
+
+// jwt_access strategy
+passport.use(
+	new JwtStrategy(
+		"jwt_access",
 		{
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			secretOrKey: process.env.JWT_ACCESS_SECRET,
@@ -71,7 +142,7 @@ passport.use(
 				if (!user) {
 					return done(null, false, {
 						type: `jwt`,
-						message: `User does not exist in database.`,
+						message: `User NOT found in database.`,
 					});
 				}
 

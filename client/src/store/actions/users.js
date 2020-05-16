@@ -32,13 +32,13 @@ export const getUser_current = async (history, dispatch) => {
 			"/api/users/current",
 			setRequestHeaders(),
 		);
-		const { jwt } = response.data;
+		const { jwt_access } = response.data;
 
 		// store JWT in local storage
-		localStorage.setItem("jwt", jwt);
+		localStorage.setItem("jwt_access", jwt_access);
 
 		// decode JWT to get user data and set user_current state
-		const decoded = jwt_decode(jwt);
+		const decoded = jwt_decode(jwt_access);
 		dispatch({
 			type: actionTypes.SET_CURRENT_USER,
 			payload: decoded,

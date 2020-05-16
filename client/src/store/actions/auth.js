@@ -59,7 +59,7 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 		);
 		const { token } = response.data;
 		// store JWT in local storage
-		localStorage.setItem("jwt", token);
+		localStorage.setItem("jwtAccess", token);
 
 		// decode JWT to get user data and set login_user state
 		const decoded = jwt_decode(token);
@@ -107,7 +107,8 @@ export const logoutUser = (history, dispatch) => {
 
 export const logoutFrontend = (history, dispatch) => {
 	// remove JWT from localStorage
-	localStorage.removeItem("JWT");
+	localStorage.removeItem("jwt_access");
+	console.log("jwt_access cleared from local storage.");
 
 	// logout from front-end and remove checked out books
 	dispatch({
@@ -126,7 +127,6 @@ export const logoutFrontend = (history, dispatch) => {
 
 	// to support logging out from all windows
 	window.localStorage.setItem("logout", Date.now());
-
 	console.log("User logged out from client (front end).");
 };
 

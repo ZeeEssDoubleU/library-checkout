@@ -8,18 +8,95 @@ import validateLogin from "../../../client/src/validate/login";
 // import passport config
 import passport from "../../config/passport";
 // import helpers
-import { createUser, findUser } from "../users/controllers";
+import {
+	createUser,
+	findUser,
+	updateUser_refreshToken,
+} from "../users/controllers";
 
 // *************
 // helpers
 // *************
 export const checkAuthenticated = (req, res, next) => {
-	// if user authenticated (from local strat), move on // ! deprecated: local login (keeping in place anyways)
+	// if user authenticated (from local strat), move on
+	// ! deprecated: local login (keeping isAuthenticated in place anyways)
 	if (req.isAuthenticated() === true) {
 		return next();
 	} else {
-		// else, check if JWT available and valid
-		passport.authenticate("jwt", { session: false }, (err, user, info) => {
+		// else, check if jwt_access available and valid
+		passport.authenticate(
+			"jwt_access",
+			{ session: false },
+			(err, user, info) => {
+				if (err) return next(err);
+
+				// if jwt valid, move on
+				if (user) {
+					return next();
+				}
+
+				// if jwt invalid (didn't return user), return error
+				if (!user) {
+					return next({
+						status: 401,
+						message: { jwt: info.message },
+						stack: new Error(info.message),
+					});
+				}
+			},
+		)(req, res, next);
+	}
+};
+
+// TODO: figure out where to use this
+export const checkLoggedIn = (req, res, next) => {
+	return req.isAuthenticated()
+		? res.json(`WHAT!!! Already logged in!!!`)
+		: next();
+};
+
+// TODO: FIX TOKEN ISSUES !!!!! RES, COOKIES, ETC.
+export const refreshToken_generate = async (req, res, next, user) => {
+	try {
+		// create jwt
+		const token = await jwt.sign(user, process.env.JWT_REFRESH_SECRET, {
+			expiresIn: "30d", // 30 days
+		});
+
+		// add refresh_token to user in database
+		// used for verification when refreshing new jwt_access tokens
+		updateUser_refreshToken(token, user.email);
+
+		res.cookie("jwt_refresh", token, { httpOnly: true, secure: false });
+		console.log("Refresh token created.");
+		return token;
+	} catch (error) {
+		return next(error);
+	}
+};
+
+export const accessToken_generate = async (req, res, next, user) => {
+	try {
+		// create jwt
+		const token = await jwt.sign(user, process.env.JWT_ACCESS_SECRET, {
+			expiresIn: "10m", // 10 minutes
+		});
+
+		res.cookie("jwt_access", token, { httpOnly: true, secure: false });
+		console.log("Access token created.");
+		return token;
+	} catch (error) {
+		return next(error);
+	}
+};
+
+// TODO: need to complete access refresh flow
+export const accessToken_refresh = async (req, res, next) => {
+	// else, check if jwt_refresh available and valid
+	passport.authenticate(
+		"jwt_refresh",
+		{ session: false },
+		(err, user, info) => {
 			if (err) return next(err);
 
 			// if jwt valid, move on
@@ -35,38 +112,10 @@ export const checkAuthenticated = (req, res, next) => {
 					stack: new Error(info.message),
 				});
 			}
-		})(req, res, next);
-	}
-};
+		},
+	)(req, res, next);
 
-// TODO: figure out where to use this
-export const checkLoggedIn = (req, res, next) => {
-	return req.isAuthenticated()
-		? res.json(`WHAT!!! Already logged in!!!`)
-		: next();
-};
-
-// TODO: FIX TOKEN ISSUES !!!!! RES, COOKIES, ETC.
-export const generateToken_refresh = async (res, payload) => {
-	// create jwt
-	const token = await jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-		expiresIn: "30d", // 30 days
-	});
-
-	res.cookie("jwt_refresh", token, { httpOnly: true, secure: false });
-	console.log("Refresh token created.");
-	return token;
-};
-
-export const generateToken_access = async (res, payload, loginMethod) => {
-	// create jwt
-	const token = await jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-		expiresIn: "10m", // 10 minutes
-	});
-
-	res.cookie("jwt_access", token, { httpOnly: true, secure: false });
-	console.log("Access token created.");
-	return token;
+	const refreshToken_existing = await findUser();
 };
 
 // *************
@@ -87,7 +136,7 @@ export const registerUser = async (req, res, next) => {
 
 	try {
 		const { first_name, last_name, email, password } = req.body;
-		// find user
+		// check if user already exists
 		const user = await findUser({ email });
 
 		// if user already registered, send error
@@ -229,8 +278,8 @@ export const loginUser_jwt = async (req, res, next) => {
 				await delete user.refresh_token;
 
 				// generate tokens
-				generateToken_refresh(res, user);
-				const token = generateToken_access(res, user);
+				await refreshToken_generate(req, res, next, user);
+				const token = await accessToken_generate(req, res, next, user);
 
 				return res.status(200).json({
 					token,
@@ -261,27 +310,33 @@ export const loginUser_facebook_callback = async (req, res, next) => {
 	await delete user.refresh_token;
 
 	// generate tokens
-	generateToken_refresh(res, user);
-	generateToken_access(res, user);
+	await refreshToken_generate(req, res, next, user);
+	await accessToken_generate(req, res, next, user);
 
 	res.redirect("http://localhost:3000/oauth/callback");
 };
 
 // TODO: new login steps
-// 1 -	generate access_token
+// 1 -	generate accessToken
 // 2 - 	generate refresh_token
 // 3 - 	set refresh_token as http only cookie
-// 4 - 	return access_token and access_token_expiry in json payload
-// 5 -	store access_token in memory
-// 6 -	start countdown for silent refresh based on access_token_expiry
-// 7 -	hit /token/refresh endpoint to issue new access_token and access_token_expiry
+// 4 - 	return accessToken and accessToken_expiry in json payload
+// 5 -	store accessToken in memory
+// 6 -	start countdown for silent refresh based on accessToken_expiry
+// 7 -	hit /access-token/refresh endpoint to issue new accessToken and accessToken_expiry
 // 8 - 	repeat from step 4 as long as necessary
 
 // TODO: fix logout to remove AND invalidate access and refresh tokens
 export const logoutUser = (req, res, next) => {
-	if (req.cookies.jwt) {
-		res.clearCookie("jwt");
-		console.log("JWT cleared from cookies.");
+	if (req.cookies) {
+		if (req.cookies.jwt_access) {
+			res.clearCookie("jwt_access");
+			console.log("jwt_access cleared from cookies.");
+		}
+		if (req.cookies.jwt_refresh) {
+			res.clearCookie("jwt_refresh");
+			console.log("jwt_refresh cleared from cookies.");
+		}
 	}
 
 	if (req.user) {
