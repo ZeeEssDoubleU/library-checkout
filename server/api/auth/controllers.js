@@ -35,11 +35,11 @@ export const checkAuthenticated = (req, res, next) => {
 					return next();
 				}
 
-				// if jwt invalid (didn't return user), return error
+				// if jwt_access invalid (didn't return user), return error
 				if (!user) {
 					return next({
 						status: 401,
-						message: { jwt: info.message },
+						message: { jwt_access: info.message },
 						stack: new Error(info.message),
 					});
 				}
@@ -55,67 +55,139 @@ export const checkLoggedIn = (req, res, next) => {
 		: next();
 };
 
-// TODO: FIX TOKEN ISSUES !!!!! RES, COOKIES, ETC.
 export const refreshToken_generate = async (req, res, next, user) => {
 	try {
+		// const expiresIn = 30 * 24 * 60 * 60; // 30 days (calculated in s)
+		const expiresIn = 1 * 45; // ? DEBUG: 1 min (calculated in s)
+
 		// create jwt
 		const token = await jwt.sign(user, process.env.JWT_REFRESH_SECRET, {
-			expiresIn: "30d", // 30 days
+			expiresIn,
 		});
 
 		// add refresh_token to user in database
 		// used for verification when refreshing new jwt_access tokens
 		updateUser_refreshToken(token, user.email);
 
-		res.cookie("jwt_refresh", token, { httpOnly: true, secure: false });
+		res.cookie("jwt_refresh", token, {
+			httpOnly: true,
+			secure: false, // TODO: will need change for https
+			maxAge: expiresIn * 1000, // should be in ms
+		});
 		console.log("Refresh token created.");
 		return token;
 	} catch (error) {
-		return next(error);
+		return next({
+			status: 500,
+			message: { jwt_refresh: error.message },
+			stack: new Error(),
+		});
 	}
 };
 
 export const accessToken_generate = async (req, res, next, user) => {
 	try {
+		// const expiresIn = 10 * 60; // 10 mins (calculated in s)
+		const expiresIn = 15; // ? DEBUG: 15 sec (calculated in s)
+
 		// create jwt
 		const token = await jwt.sign(user, process.env.JWT_ACCESS_SECRET, {
-			expiresIn: "10m", // 10 minutes
+			expiresIn,
 		});
 
-		res.cookie("jwt_access", token, { httpOnly: true, secure: false });
+		res.cookie("jwt_access", token, {
+			httpOnly: true,
+			secure: false, // TODO: will need change for https
+			maxAge: expiresIn * 1000, // should be in ms
+		});
 		console.log("Access token created.");
 		return token;
 	} catch (error) {
-		return next(error);
+		return next({
+			status: 401,
+			message: { jwt_refresh: error.message },
+			stack: new Error(),
+		});
 	}
 };
 
-// TODO: need to complete access refresh flow
 export const accessToken_refresh = async (req, res, next) => {
 	// else, check if jwt_refresh available and valid
 	passport.authenticate(
 		"jwt_refresh",
 		{ session: false },
-		(err, user, info) => {
+		async (err, user, info) => {
 			if (err) return next(err);
 
-			// if jwt valid, move on
+			// if user returned from jwt_refresh auth
 			if (user) {
-				return next();
+				const refreshToken_client = req.cookies.jwt_refresh;
+				const refreshToken_database = user.refresh_token;
+
+				// check if client and database refresh tokens are equal
+				if (refreshToken_client === refreshToken_database) {
+					const decoded = jwt.verify(
+						refreshToken_client,
+						process.env.JWT_REFRESH_SECRET,
+					);
+					const expiration = decoded.exp * 1000; // s -> ms
+					const now = Date.now(); // ms
+					const expired = Date.now() >= expiration;
+
+					// if refresh token is expired, return error
+					if (expired) {
+						return next({
+							status: 401,
+							message: {
+								jwt_refresh:
+									"Refresh token is expired.  Please login again.",
+							},
+							stack: new Error(),
+						});
+					}
+
+					// add auth type and delete sensitive data before logging in
+					user.auth = "jwt refresh";
+					await delete user.password;
+					await delete user.refresh_token;
+
+					// SUCCESS: generate new access token
+					const jwt_access = await accessToken_generate(
+						req,
+						res,
+						next,
+						user,
+					);
+					return res.status(200).json({
+						jwt_refresh: req.cookies.jwt_refresh,
+						jwt_access,
+						message:
+							"User login automatically renewed (access token refreshed).",
+					});
+
+					// if client and database refresh token do NOT match
+				} else {
+					return next({
+						status: 401,
+						message: {
+							jwt_refresh:
+								"Client refresh token does NOT match user's refresh token in database.",
+						},
+						stack: new Error(),
+					});
+				}
 			}
 
 			// if jwt invalid (didn't return user), return error
 			if (!user) {
 				return next({
 					status: 401,
-					message: { jwt: info.message },
+					message: { jwt_refresh: info.message },
 					stack: new Error(info.message),
 				});
 			}
 		},
 	)(req, res, next);
-
-	const refreshToken_existing = await findUser();
 };
 
 // *************
@@ -176,55 +248,55 @@ export const registerUser = async (req, res, next) => {
 };
 
 // ! deprecated: local login
-// export const loginUser_local = async (req, res, next) => {
-// 	const { errors, isValid } = validateLogin(req.body);
+export const loginUser_local = async (req, res, next) => {
+	const { errors, isValid } = validateLogin(req.body);
 
-// 	// if request not valid, return errors
-// 	if (!isValid) {
-// 		return next({
-// 			status: 422,
-// 			message: errors,
-// 			stack: new Error(`Check login validator.`),
-// 		});
-// 	}
+	// if request not valid, return errors
+	if (!isValid) {
+		return next({
+			status: 422,
+			message: errors,
+			stack: new Error(`Check login validator.`),
+		});
+	}
 
-// 	passport.authenticate("local", (err, user, info) => {
-// 		if (err) return next(err);
+	passport.authenticate("local", (err, user, info) => {
+		if (err) return next(err);
 
-// 		// if no user
-// 		if (!user) {
-// 			// email error returned
-// 			if (info.type === `email`) {
-// 				errors.email = info.message;
-// 				return next({
-// 					status: 401,
-// 					message: errors,
-// 					stack: new Error(errors.email),
-// 				});
-// 			}
-// 			// password error returned
-// 			if (info.type === `password`) {
-// 				errors.password = info.message;
-// 				return next({
-// 					status: 401,
-// 					message: errors,
-// 					stack: new Error(errors.password),
-// 				});
-// 			}
-// 		}
+		// if no user
+		if (!user) {
+			// email error returned
+			if (info.type === `email`) {
+				errors.email = info.message;
+				return next({
+					status: 401,
+					message: errors,
+					stack: new Error(errors.email),
+				});
+			}
+			// password error returned
+			if (info.type === `password`) {
+				errors.password = info.message;
+				return next({
+					status: 401,
+					message: errors,
+					stack: new Error(errors.password),
+				});
+			}
+		}
 
-// 		// add auth type to user before logging in
-// 		user.auth = "local";
+		// add auth type to user before logging in
+		user.auth = "local";
 
-// 		// if user, login user
-// 		req.login(user, (err) => {
-// 			if (err) return next(err);
+		// if user, login user
+		req.login(user, (err) => {
+			if (err) return next(err);
 
-// 			console.log(`Success!  Password is correct :D`);
-// 			return res.status(200).json(user);
-// 		});
-// 	})(req, res, next);
-// };
+			console.log(`Success!  Password is correct :D`);
+			return res.status(200).json(user);
+		});
+	})(req, res, next);
+};
 
 export const loginUser_jwt = async (req, res, next) => {
 	// validate request
@@ -278,11 +350,17 @@ export const loginUser_jwt = async (req, res, next) => {
 				await delete user.refresh_token;
 
 				// generate tokens
-				await refreshToken_generate(req, res, next, user);
-				const token = await accessToken_generate(req, res, next, user);
+				const jwt_refresh = await refreshToken_generate(
+					req,
+					res,
+					next,
+					user,
+				);
+				const jwt_access = await accessToken_generate(req, res, next, user);
 
 				return res.status(200).json({
-					token,
+					jwt_refresh,
+					jwt_access,
 					message: `User found and logged in (token created).`,
 				});
 			} else {
@@ -316,17 +394,6 @@ export const loginUser_facebook_callback = async (req, res, next) => {
 	res.redirect("http://localhost:3000/oauth/callback");
 };
 
-// TODO: new login steps
-// 1 -	generate accessToken
-// 2 - 	generate refresh_token
-// 3 - 	set refresh_token as http only cookie
-// 4 - 	return accessToken and accessToken_expiry in json payload
-// 5 -	store accessToken in memory
-// 6 -	start countdown for silent refresh based on accessToken_expiry
-// 7 -	hit /access-token/refresh endpoint to issue new accessToken and accessToken_expiry
-// 8 - 	repeat from step 4 as long as necessary
-
-// TODO: fix logout to remove AND invalidate access and refresh tokens
 export const logoutUser = (req, res, next) => {
 	if (req.cookies) {
 		if (req.cookies.jwt_access) {
@@ -344,10 +411,10 @@ export const logoutUser = (req, res, next) => {
 		req.logout();
 		return res
 			.status(200)
-			.json({ message: `User logged out from session (back end).` });
+			.json({ message: "User logged out from session (back end)." });
 	}
 
 	return res
 		.status(200)
-		.json({ message: `No user logged into session (back end).` });
+		.json({ message: "No user logged into session (back end)." });
 };

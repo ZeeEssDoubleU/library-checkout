@@ -1,11 +1,14 @@
 import { db } from "../../config/database";
 import bcrypt from "bcrypt";
 import capitalize from "lodash/fp/capitalize";
+import jwt from "jsonwebtoken";
 // import validations
 import validateRegister from "../../../client/src/validate/register";
 import validateLogin from "../../../client/src/validate/login";
 // import passport config
 import passport from "../../config/passport";
+// import controller
+import { accessToken_refresh } from "../auth/controllers";
 
 // *************
 // helpers
@@ -30,9 +33,7 @@ export const createUser = async (input) => {
 	return result.rows[0];
 };
 
-export const updateUser_refreshToken = async (input) => {
-	const { refresh_token, email } = input;
-
+export const updateUser_refreshToken = async (refresh_token, email) => {
 	const result = await db.query(
 		`UPDATE public.user SET refresh_token = $1 where email = $2 RETURNING *`,
 		[refresh_token, email],
@@ -74,18 +75,60 @@ export const getUser_byId = async (req, res, next) => {
 	}
 };
 
-export const getUser_current = (req, res, next) => {
-	// if jwt cookie found, return cookie and log user into client
-	if (req.cookies && req.cookies.jwt_access) {
-		return res.status(200).json({
-			jwt_access: req.cookies.jwt_access,
-			message: `jwt_access cookie found and user logged into client.`,
-		});
+export const getUser_current = async (req, res, next) => {
+	if (req.cookies && req.cookies.jwt_refresh) {
+		// if access token does NOT exist
+		if (!req.cookies.jwt_access) {
+			console.log("No access cookie.  Generating new...");
+
+			// accessToken_refresh will resolve to client on its own
+			return accessToken_refresh(req, res, next);
+
+			// if access token exists
+		} else {
+			const jwt_refresh = req.cookies.jwt_refresh;
+			const jwt_access = req.cookies.jwt_access;
+
+			// verify jwt_refresh (auto checks if expired)
+			// need to try jwt_refresh first as security buffer for jwt_access
+			try {
+				await jwt.verify(jwt_refresh, process.env.JWT_REFRESH_SECRET);
+				console.log("jwt_refresh verified.");
+			} catch (error) {
+				return next({
+					status: 401,
+					message: { jwt_refresh: error.message },
+					stack: new Error(),
+				});
+			}
+
+			// verify jwt_access (auto checks if expired)
+			try {
+				await jwt.verify(jwt_access, process.env.JWT_ACCESS_SECRET);
+				console.log("jwt_access verified.");
+			} catch (error) {
+				next({
+					status: 401,
+					message: { jwt_access: error.message },
+					stack: new Error(),
+				});
+				// accessToken_refresh will resolve to client on its own
+				return accessToken_refresh(req, res, next);
+			}
+
+			// SUCCESS: if jwt cookies found, return cookies and log user into client
+			return res.status(200).json({
+				jwt_refresh: req.cookies.jwt_refresh,
+				jwt_access: req.cookies.jwt_access,
+				message: `JWT cookies found and user logged into client.`,
+			});
+		}
+
 		// else, return error
 	} else {
 		return next({
 			status: 401,
-			message: `JWT cookie NOT found.`,
+			message: { jwt_refresh: "Refresh cookie NOT found.  Logging out..." },
 			stack: new Error(),
 		});
 	}

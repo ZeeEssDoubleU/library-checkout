@@ -26,3 +26,9 @@ content-type: application/json
    "email": "agentsmith@thematrix.com",
    "password": "password"
 }
+
+###
+
+GET http://localhost:3000/api/auth/access-token/refresh
+
+--Cookie: "jwt_refresh=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTcsImZpcnN0X25hbWUiOiJaYWNoYXJ5IiwibGFzdF9uYW1lIjoiV2lsbGlhbXMiLCJlbWFpbCI6Inphay53aWxsaWFtczIyODdAZ21haWwuY29tIiwiYXV0aCI6ImZhY2Vib29rIiwiaWF0IjoxNTg5NzcxNDAyLCJleHAiOjQxODE3NzE0MDJ9.wKIxwhrFi3Sf-NNhl3-xBTK-hgf41L7wITs0Orl-21E"

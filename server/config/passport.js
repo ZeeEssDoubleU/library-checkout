@@ -55,56 +55,24 @@ import { Strategy as OAuth2Strategy } from "passport-oauth2";
 // 	),
 // );
 
-// jwt_access strategy
-passport.use(
-	new JwtStrategy(
-		"jwt_access",
-		{
-			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-			secretOrKey: process.env.JWT_ACCESS_SECRET,
-		},
-		async (jwt_payload, done) => {
-			try {
-				// check to see if user exists in database
-				// ? may not really need this check
-				const user = await findUser({ email: jwt_payload.email });
-
-				if (!user) {
-					return done(null, false, {
-						type: `jwt_access`,
-						message: `User NOT found in database.`,
-					});
-				}
-
-				return done(null, user);
-			} catch (error) {
-				return done(error, {
-					type: `passport`,
-					message: `Passport - jwt_access strategy: ${error}`,
-				});
-			}
-		},
-	),
-);
-
-// jwt_refesh strategy
-const extract_jwt_refresh = (req) => {
+// jwt_refresh strategy
+const refreshToken_extract = (req) => {
 	return req.cookies && req.cookies.jwt_refresh
 		? req.cookies.jwt_refresh
 		: null;
 };
 
 passport.use(
+	"jwt_refresh",
 	new JwtStrategy(
-		"jwt_refresh",
 		{
-			jwtFromRequest: extract_jwt_refresh,
+			jwtFromRequest: refreshToken_extract,
 			secretOrKey: process.env.JWT_REFRESH_SECRET,
 		},
 		async (jwt_payload, done) => {
 			try {
 				// check to see if user exists in database
-				// ? may not really need this check
+				// ? may not really need this check here
 				const user = await findUser({ email: jwt_payload.email });
 
 				if (!user) {
@@ -127,8 +95,8 @@ passport.use(
 
 // jwt_access strategy
 passport.use(
+	"jwt_access",
 	new JwtStrategy(
-		"jwt_access",
 		{
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			secretOrKey: process.env.JWT_ACCESS_SECRET,
@@ -141,7 +109,7 @@ passport.use(
 
 				if (!user) {
 					return done(null, false, {
-						type: `jwt`,
+						type: `jwt_access`,
 						message: `User NOT found in database.`,
 					});
 				}

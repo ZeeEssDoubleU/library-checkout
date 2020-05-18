@@ -1,12 +1,11 @@
 import axios from "axios";
-import jwt_decode from "jwt-decode";
 // import actions
 import { logErrors } from "./errors";
-import { setRequestHeaders } from "./common";
-import { actionTypes as actionTypes_books } from "./books";
-import { actionTypes as actionTypes_users } from "./users";
+import { setRequestHeaders, saveAccessTokenToClient } from "./common";
+import { actionTypes_books } from "./books";
+import { actionTypes_users, getUser_current, setCurrentUser } from "./users";
 
-export const actionTypes = {
+export const actionTypes_auth = {
 	REGISTER_USER: "REGISTER_USER",
 };
 
@@ -57,50 +56,40 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 			userData,
 			setRequestHeaders(),
 		);
-		const { token } = response.data;
-		// store JWT in local storage
-		localStorage.setItem("jwtAccess", token);
+		const { jwt_refresh, jwt_access } = response.data;
 
-		// decode JWT to get user data and set login_user state
-		const decoded = jwt_decode(token);
-		dispatch({
-			type: actionTypes_users.SET_CURRENT_USER,
-			payload: decoded,
-		});
+		saveAccessTokenToClient(jwt_access, history, dispatch);
+		setCurrentUser(jwt_refresh, dispatch);
 
 		// TODO reactivate redirect when ready
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
-
-		console.log(`Success!  Logged in as user:`, decoded.email);
 	} catch (error) {
 		logErrors({ login_jwt: error.response.data.message }, dispatch);
 	}
 };
 
-export const checkUserLoggedIn = (history, dispatch) => {
-	// check if JWT exists in local storage
-	const token = localStorage.jwt ? localStorage.jwt : null;
+// refresh access token
+export const accessToken_refresh = async (history, dispatch) => {
+	try {
+		const response = await axios.get(
+			"/api/auth/access-token/refresh",
+			setRequestHeaders(),
+		);
 
-	if (token) {
-		// decode JWT to get user data and set user_current state
-		const decoded = jwt_decode(token);
-		dispatch({
-			type: actionTypes_users.SET_CURRENT_USER,
-			payload: decoded,
-		});
+		const { jwt_access, message } = response.data;
 
-		// get currentTime in seconds
-		const currentTime = Date.now() / 1000;
-		// if JWT expired, logout user
-
-		if (currentTime > decoded.exp) {
-			logoutUser(history, dispatch);
-		}
+		saveAccessTokenToClient(jwt_access, history, dispatch);
+		console.log(message);
+	} catch (error) {
+		logErrors({ accessToken_refresh: error.response.data.message }, dispatch);
+		history.push("/login");
 	}
 };
 
+// logout functions
 export const logoutUser = (history, dispatch) => {
+	console.log("Logging user out...");
 	logoutFrontend(history, dispatch);
 	logoutBackend(dispatch);
 };

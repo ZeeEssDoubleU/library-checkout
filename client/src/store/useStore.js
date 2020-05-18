@@ -3,13 +3,9 @@ import React, { createContext, useContext, useReducer, useEffect } from "react";
 import isEmpty from "lodash/fp/isEmpty";
 import axios from "axios";
 // import action types
-import { actionTypes as actionTypes_books } from "./actions/books";
-import {
-	actionTypes as actionTypes_users,
-	getCurrentUser,
-} from "./actions/users";
-import { actionTypes as actionTypes_errors, logErrors } from "./actions/errors";
-import { getUser_current } from "./actions/users";
+import { actionTypes_books } from "./actions/books";
+import { actionTypes_users } from "./actions/users";
+import { actionTypes_errors } from "./actions/errors";
 
 // reducer
 const reducer = (state, action) => {

@@ -1,4 +1,4 @@
-import React, { useEffect, Fragment } from "react";
+import React, { useEffect, Fragment, memo } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
@@ -6,7 +6,7 @@ import { useHistory } from "react-router-dom";
 import useStore from "../../store/useStore";
 import { getUser_current } from "../../store/actions/users";
 
-const OAuthCallback = (props) => {
+const OAuthCallback = memo((props) => {
 	const { state, dispatch } = useStore();
 	const history = useHistory();
 
@@ -22,7 +22,8 @@ const OAuthCallback = (props) => {
 	}, []);
 
 	return <Fragment />;
-};
+});
+
 OAuthCallback.propTypes = {};
 
 export default OAuthCallback;

@@ -8,6 +8,7 @@ import {
 	logoutUser,
 	refreshToken_generate,
 	accessToken_generate,
+	accessToken_refresh,
 } from "./controllers";
 // import passport
 import passport from "../../config/passport";
@@ -23,7 +24,6 @@ router.post("/register", registerUser);
 // @desc - login user
 // @access - public
 router.post("/login/jwt", loginUser_jwt);
-
 // router.post("/login/local", loginUser_local); // ! deprecated: local login
 
 router.get("/login/facebook", passport.authenticate("facebook"));
@@ -36,12 +36,12 @@ router.get(
 	loginUser_facebook_callback,
 );
 
-// @route - GET api/auth/token/refresh
+// @route - GET api/auth/token_type/generate_or_refresh
 // @desc - refresh access token
 // @access - public
-// router.post("/refresh-token/generate", refreshToken_generate);
-// router.post("/access-token/generate", accessToken_generate);
-// router.post("/access-token/refresh", accessToken_refresh);
+router.get("/access-token/refresh", accessToken_refresh);
+// router.get("/refresh-token/generate", refreshToken_generate);
+// router.get("/access-token/generate", accessToken_generate);
 
 // @route - GET api/auth/logout
 // @desc - get all users

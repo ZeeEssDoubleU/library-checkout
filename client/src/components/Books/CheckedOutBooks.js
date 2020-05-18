@@ -1,20 +1,23 @@
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
+import axios from "axios";
+import { useHistory } from "react-router-dom";
 // import components
 import Book from "./Book";
 // import store, actions
 import useStore from "../../store/useStore.js";
 import { getCheckedOutBooks } from "../../store/actions/books";
-import { useHistory } from "react-router-dom";
 
 const CheckedOutBooks = (props) => {
 	const { state, dispatch } = useStore();
 	const history = useHistory();
 
 	useEffect(() => {
-		getCheckedOutBooks(dispatch, history);
-	}, []);
+		if (window.localStorage.jwt_access) {
+			getCheckedOutBooks(dispatch, history);
+		}
+	}, [window.localStorage.jwt_access]);
 
 	const displayBooks =
 		state.books_checked_out &&
@@ -30,7 +33,17 @@ const CheckedOutBooks = (props) => {
 			/>
 		));
 
-	return <Grid>{displayBooks}</Grid>;
+	const buttonClick = async (event) => {
+		event.preventDefault();
+		await axios.get("/api/auth/access-token/refresh");
+	};
+
+	return (
+		<Grid>
+			{/* <TestButton onClick={buttonClick}>TEST TEST TEST</TestButton> */}
+			{displayBooks}
+		</Grid>
+	);
 };
 
 CheckedOutBooks.propTypes = {};
@@ -44,4 +57,10 @@ const Grid = styled.div`
 	justify-content: center;
 
 	margin: 2em;
+`;
+
+const TestButton = styled.button`
+	background: none;
+	border: 1px solid black;
+	border-radius: 1em;
 `;

@@ -19,7 +19,7 @@ export const db = new Pool({
 });
 
 // server addons
-// TODO adjust server options
+// TODO adjust server options when ready for prod
 export const corsOptions = isProduction ? "" : "*";
 
 export const limiter = rateLimit({
