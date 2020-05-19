@@ -5,13 +5,13 @@ import styled from "styled-components";
 import Book from "./Book";
 // import store, actions
 import useStore from "../../store/useStore.js";
-import { getAvailableBooks } from "../../store/actions/books";
+import { getBooks_available } from "../../store/actions/books";
 
 const AllBooks = (props) => {
 	const { state, dispatch } = useStore();
 
 	useEffect(() => {
-		getAvailableBooks(dispatch);
+		getBooks_available(state, dispatch);
 	}, []);
 
 	const displayBooks =

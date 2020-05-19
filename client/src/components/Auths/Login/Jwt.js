@@ -39,7 +39,7 @@ const Jwt = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		loginUser_jwt(formData, history, dispatch);
+		loginUser_jwt(formData, history, state, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,

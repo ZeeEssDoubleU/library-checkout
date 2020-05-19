@@ -1,20 +1,22 @@
 import axios from "axios";
+import jwt_decode from "jwt-decode";
 // import actions
 import { logErrors } from "./errors";
-import { setRequestHeaders, saveAccessTokenToClient } from "./common";
+import { setRequestHeaders } from "./common";
 import { actionTypes_books } from "./books";
-import { actionTypes_users, getUser_current, setCurrentUser } from "./users";
+import { actionTypes_users, currentUser_setState } from "./users";
 
 export const actionTypes_auth = {
 	REGISTER_USER: "REGISTER_USER",
+	SAVE_ACCESS_TOKEN: "SAVE_ACCESS_TOKEN",
 };
 
-export const registerUser = async (userData, history, dispatch) => {
+export const registerUser = async (userData, history, state, dispatch) => {
 	try {
 		const response = await axios.post(
 			"/api/auth/register",
 			userData,
-			setRequestHeaders(),
+			setRequestHeaders(state),
 		);
 		// response should only be email (check registerUser controller)
 		// if successful, redirect to login page
@@ -27,41 +29,41 @@ export const registerUser = async (userData, history, dispatch) => {
 };
 
 // ! deprecated: local login
-// export const loginUser_local = async (userData, history, dispatch) => {
-// 	try {
-// 		const response = await axios.post(
-// 			"/api/auth/login/local",
-// 			userData,
-// 			setRequestHeaders(),
-// 		);
-// 		dispatch({
-// 			type: actionTypes_users.SET_CURRENT_USER,
-// 			payload: response.data,
-// 		});
+const local_login = {
+	// export const loginUser_local = async (userData, history, state, dispatch) => {
+	// 	try {
+	// 		const response = await axios.post(
+	// 			"/api/auth/login/local",
+	// 			userData,
+	// 			setRequestHeaders(state),
+	// 		);
+	// 		dispatch({
+	// 			type: actionTypes_users.SET_CURRENT_USER,
+	// 			payload: response.data,
+	// 		});
+	// 		// TODO reactivate redirect when ready
+	// 		// // if successful, redirect to checked-out page
+	// 		// history.push("/books/checked-out");
+	// 		console.log(`Success!  Logged in as user:`, response.data.email);
+	// 	} catch (error) {
+	// 		logErrors({ login_local: error.response.data.message }, dispatch);
+	// 	}
+	// };
+};
 
-// 		// TODO reactivate redirect when ready
-// 		// // if successful, redirect to checked-out page
-// 		// history.push("/books/checked-out");
-
-// 		console.log(`Success!  Logged in as user:`, response.data.email);
-// 	} catch (error) {
-// 		logErrors({ login_local: error.response.data.message }, dispatch);
-// 	}
-// };
-
-export const loginUser_jwt = async (userData, history, dispatch) => {
+export const loginUser_jwt = async (userData, history, state, dispatch) => {
 	try {
 		const response = await axios.post(
 			"/api/auth/login/jwt",
 			userData,
-			setRequestHeaders(),
+			setRequestHeaders(state),
 		);
 		const { jwt_refresh, jwt_access } = response.data;
 
-		saveAccessTokenToClient(jwt_access, history, dispatch);
-		setCurrentUser(jwt_refresh, dispatch);
+		accessToken_setState(jwt_access, history, state, dispatch);
+		currentUser_setState(jwt_refresh, dispatch);
 
-		// TODO reactivate redirect when ready
+		// TODO consider redirecting
 		// // if successful, redirect to checked-out page
 		// history.push("/books/checked-out");
 	} catch (error) {
@@ -69,47 +71,106 @@ export const loginUser_jwt = async (userData, history, dispatch) => {
 	}
 };
 
+// check if user logged in upon loading or refreshing initial page
+export const accessToken_get = async (history, state, dispatch) => {
+	console.log("Checking if user already logged in...");
+
+	// check if jwt_access exists in local storage
+	const tokenInClient = state.jwt_access && state.jwt_access_expiry; // boolean
+
+	// if token in client, check if expired
+	if (tokenInClient) {
+		const now = Date.now(); // ms
+		const expiration = state.jwt_access_expiry; // ms
+		const expired = now >= expiration; // boolean
+
+		// if token expired, get current user
+		if (expired) {
+			console.log("Access token expired.  Refreshing...");
+			await accessToken_refresh(history, state, dispatch);
+		}
+		// TODO: consider redirecting
+		// history.push("/books/checked-out");
+	} else {
+		console.log("No access token in client.  Refreshing...");
+		accessToken_refresh(history, state, dispatch);
+	}
+};
+
 // refresh access token
-export const accessToken_refresh = async (history, dispatch) => {
+export const accessToken_refresh = async (
+	history,
+	state,
+	dispatch,
+	timeoutDuration = 0,
+) => {
 	try {
 		const response = await axios.get(
 			"/api/auth/access-token/refresh",
-			setRequestHeaders(),
+			setRequestHeaders(state, timeoutDuration),
 		);
 
 		const { jwt_access, message } = response.data;
 
-		saveAccessTokenToClient(jwt_access, history, dispatch);
+		accessToken_setState(jwt_access, history, state, dispatch);
 		console.log(message);
 	} catch (error) {
+		console.error(error);
 		logErrors({ accessToken_refresh: error.response.data.message }, dispatch);
 		history.push("/login");
 	}
 };
 
-// logout functions
-export const logoutUser = (history, dispatch) => {
-	console.log("Logging user out...");
-	logoutFrontend(history, dispatch);
-	logoutBackend(dispatch);
+export const accessToken_setState = (token, history, state, dispatch) => {
+	// decode token to get user data and set login_user state
+	const decoded = jwt_decode(token);
+	const expiration = decoded.exp * 1000; // s -> ms
+	const now = Date.now(); // ms
+	const duration = expiration - now; // ms
+
+	// store token and expiration in memory
+	dispatch({
+		type: actionTypes_auth.SAVE_ACCESS_TOKEN,
+		payload: {
+			jwt_access: token,
+			jwt_access_expiry: expiration,
+		},
+	});
+
+	const timeoutDuration = duration - 3000; // ms
+	accessToken_refresh(history, state, dispatch, timeoutDuration);
 };
 
-export const logoutFrontend = (history, dispatch) => {
-	// remove JWT from localStorage
-	localStorage.removeItem("jwt_access");
-	console.log("jwt_access cleared from local storage.");
+// logout functions
+export const logoutUser = (history, state, dispatch) => {
+	console.log("Logging user out...");
+	logoutFrontend(history, dispatch);
+	logoutBackend(state, dispatch);
+};
 
+export const logoutFrontend = async (history, dispatch) => {
+	// remove user_current from local storage
+	localStorage.removeItem("persistedState");
+
+	// remove token and expiration in memory
+	await dispatch({
+		type: actionTypes_auth.SAVE_ACCESS_TOKEN,
+		payload: {
+			jwt_access: null,
+			jwt_access_expiry: null,
+		},
+	});
 	// logout from front-end and remove checked out books
-	dispatch({
+	await dispatch({
 		type: actionTypes_users.SET_CURRENT_USER,
 		payload: null,
 	});
-	dispatch({
+	await dispatch({
 		type: actionTypes_books.GET_BOOKS_CHECKED_OUT,
 		payload: null,
 	});
 
-	// redirect to login page
+	// redirect to login page (wait for all dispatches to finish to ui displays logout correctly)
 	if (history.location.pathname !== "/login") {
 		history.push("/login");
 	}
@@ -119,10 +180,13 @@ export const logoutFrontend = (history, dispatch) => {
 	console.log("User logged out from client (front end).");
 };
 
-export const logoutBackend = async (dispatch) => {
+export const logoutBackend = async (state, dispatch) => {
 	try {
 		// logout from session
-		const response = await axios.get("/api/auth/logout", setRequestHeaders());
+		const response = await axios.get(
+			"/api/auth/logout",
+			setRequestHeaders(state),
+		);
 
 		console.log(response.data.message);
 	} catch (error) {

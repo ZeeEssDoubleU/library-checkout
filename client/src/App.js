@@ -12,18 +12,23 @@ import Users from "./components/Users/Users.js";
 import PrivateRoute from "./components/Auths/PrivateRoute";
 // import store/actions
 import useStore from "./store/useStore";
-import { checkUserLoggedIn } from "./store/actions/users";
+import { accessToken_get } from "./store/actions/auth";
+import { getUser_current } from "./store/actions/users";
 import OAuthCallback from "./components/Auths/OAuthCallback";
 
 function App() {
 	const { state, dispatch } = useStore();
 	const history = useHistory();
 
-	// checks if user already logged in
-	// if JWT available, checks if expired or not
+	// checks if user already logged into client
+	// if jwt already in memory, check expiration
 	useEffect(() => {
 		if (history.location.pathname !== "/oauth/callback") {
-			checkUserLoggedIn(state.user_current, history, dispatch);
+			if (state.user_current) {
+				accessToken_get(history, state, dispatch);
+			} else {
+				getUser_current(history, state, dispatch);
+			}
 		}
 	}, [state.user_current, history]);
 
@@ -36,7 +41,7 @@ function App() {
 				<Route exact path="/register" component={Register} />
 				<Route exact path="/books/all" component={AllBooks} />
 				<Route exact path="/books/available" component={AvailableBooks} />
-				<PrivateRoute
+				<Route
 					exact
 					path="/books/checked-out"
 					component={CheckedOutBooks}

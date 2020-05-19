@@ -11,7 +11,7 @@ const AllBooks = (props) => {
 	const { state, dispatch } = useStore();
 
 	useEffect(() => {
-		getBooks(dispatch);
+		getBooks(state, dispatch);
 	}, []);
 
 	const displayBooks =

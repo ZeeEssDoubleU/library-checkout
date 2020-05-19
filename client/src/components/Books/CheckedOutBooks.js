@@ -2,22 +2,20 @@ import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import axios from "axios";
-import { useHistory } from "react-router-dom";
 // import components
 import Book from "./Book";
 // import store, actions
 import useStore from "../../store/useStore.js";
-import { getCheckedOutBooks } from "../../store/actions/books";
+import { getBooks_checkedOut } from "../../store/actions/books";
 
 const CheckedOutBooks = (props) => {
 	const { state, dispatch } = useStore();
-	const history = useHistory();
 
 	useEffect(() => {
-		if (window.localStorage.jwt_access) {
-			getCheckedOutBooks(dispatch, history);
+		if (state.jwt_access && !state.books_checked_out) {
+			getBooks_checkedOut(state, dispatch);
 		}
-	}, [window.localStorage.jwt_access]);
+	}, [state.jwt_access, !state.books_checked_out]);
 
 	const displayBooks =
 		state.books_checked_out &&

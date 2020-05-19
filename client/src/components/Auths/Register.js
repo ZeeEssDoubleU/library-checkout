@@ -42,7 +42,7 @@ const Register = (props) => {
 	const onSubmit = async (event) => {
 		event.preventDefault();
 		// register user and await reponse if errors
-		registerUser(formData, history, dispatch);
+		registerUser(formData, history, state, dispatch);
 		setFormData({
 			...formData,
 			submitted: true,

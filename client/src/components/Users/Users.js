@@ -11,7 +11,7 @@ const Users = (props) => {
 	const { state, dispatch } = useStore();
 
 	useEffect(() => {
-		getUsers(dispatch);
+		getUsers(state, dispatch);
 	}, []);
 
 	const dislayUsers =

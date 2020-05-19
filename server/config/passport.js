@@ -10,50 +10,49 @@ import { Strategy as OAuth2Strategy } from "passport-oauth2";
 // import { Strategy as LocalStrategy } from "passport-local"; // ! deprecated: local login
 
 // ! deprecated: local login
-// // local strategy
-// passport.use(
-// 	new LocalStrategy(
-// 		{ usernameField: `email` },
-// 		async (email, password, done) => {
-// 			try {
-// 				// find user
-// 				const user = await findUser({ email });
-
-// 				// if no user found, return false with error message
-// 				if (!user) {
-// 					return done(null, false, {
-// 						type: `email`,
-// 						message: `No user found with that email.`,
-// 					});
-// 				}
-
-// 				// compare passwords
-// 				const match = await bcrypt.compare(password, user.password);
-// 				// remove encrypted password for security
-// 				delete user.password;
-
-// 				if (match) {
-// 					// if match, return success
-// 					return done(null, user, {
-// 						type: `success`,
-// 						message: `Logged in as user: ${user}.`,
-// 					});
-// 				} else {
-// 					// if no match, return false with error message
-// 					return done(null, false, {
-// 						type: `password`,
-// 						message: `Password is incorrect :(`,
-// 					});
-// 				}
-// 			} catch (error) {
-// 				return done(error, {
-// 					type: `passport`,
-// 					message: `Passport - local strategy: ${error}`,
-// 				});
-// 			}
-// 		},
-// 	),
-// );
+const login_local = {
+	// // local strategy
+	// passport.use(
+	// 	new LocalStrategy(
+	// 		{ usernameField: `email` },
+	// 		async (email, password, done) => {
+	// 			try {
+	// 				// find user
+	// 				const user = await findUser({ email });
+	// 				// if no user found, return false with error message
+	// 				if (!user) {
+	// 					return done(null, false, {
+	// 						type: `email`,
+	// 						message: `No user found with that email.`,
+	// 					});
+	// 				}
+	// 				// compare passwords
+	// 				const match = await bcrypt.compare(password, user.password);
+	// 				// remove encrypted password for security
+	// 				delete user.password;
+	// 				if (match) {
+	// 					// if match, return success
+	// 					return done(null, user, {
+	// 						type: `success`,
+	// 						message: `Logged in as user: ${user}.`,
+	// 					});
+	// 				} else {
+	// 					// if no match, return false with error message
+	// 					return done(null, false, {
+	// 						type: `password`,
+	// 						message: `Password is incorrect :(`,
+	// 					});
+	// 				}
+	// 			} catch (error) {
+	// 				return done(error, {
+	// 					type: `passport`,
+	// 					message: `Passport - local strategy: ${error}`,
+	// 				});
+	// 			}
+	// 		},
+	// 	),
+	// );
+};
 
 // jwt_refresh strategy
 const refreshToken_extract = (req) => {

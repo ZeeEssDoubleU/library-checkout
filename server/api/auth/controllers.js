@@ -17,6 +17,7 @@ import {
 // *************
 // helpers
 // *************
+
 export const checkAuthenticated = (req, res, next) => {
 	// if user authenticated (from local strat), move on
 	// ! deprecated: local login (keeping isAuthenticated in place anyways)
@@ -58,7 +59,7 @@ export const checkLoggedIn = (req, res, next) => {
 export const refreshToken_generate = async (req, res, next, user) => {
 	try {
 		// const expiresIn = 30 * 24 * 60 * 60; // 30 days (calculated in s)
-		const expiresIn = 1 * 45; // ? DEBUG: 1 min (calculated in s)
+		const expiresIn = 5 * 60; // ? DEBUG: 1 min (calculated in s)
 
 		// create jwt
 		const token = await jwt.sign(user, process.env.JWT_REFRESH_SECRET, {
@@ -111,83 +112,91 @@ export const accessToken_generate = async (req, res, next, user) => {
 	}
 };
 
+// TODO: when logged out, need to invalidate refresh_token so that access_token cannot be refreshed !!!
+// think i need to set timeout using local storage, instead of backend
+// this is because delaying on back end still allows the refresh token to be active, returning a new access token even after logging out
 export const accessToken_refresh = async (req, res, next) => {
-	// else, check if jwt_refresh available and valid
-	passport.authenticate(
-		"jwt_refresh",
-		{ session: false },
-		async (err, user, info) => {
-			if (err) return next(err);
+	// takes duration from front end (should be prescribed duration less than token expiration, default = 0)
+	const timeoutDuration = req.headers.timeoutduration || 0;
 
-			// if user returned from jwt_refresh auth
-			if (user) {
-				const refreshToken_client = req.cookies.jwt_refresh;
-				const refreshToken_database = user.refresh_token;
+	setTimeout(() => {
+		// else, check if jwt_refresh available and valid
+		passport.authenticate(
+			"jwt_refresh",
+			{ session: false },
+			async (err, user, info) => {
+				if (err) return next(err);
 
-				// check if client and database refresh tokens are equal
-				if (refreshToken_client === refreshToken_database) {
-					const decoded = jwt.verify(
-						refreshToken_client,
-						process.env.JWT_REFRESH_SECRET,
-					);
-					const expiration = decoded.exp * 1000; // s -> ms
-					const now = Date.now(); // ms
-					const expired = Date.now() >= expiration;
+				// if user returned from jwt_refresh auth
+				if (user) {
+					const refreshToken_client = req.cookies.jwt_refresh;
+					const refreshToken_database = user.refresh_token;
 
-					// if refresh token is expired, return error
-					if (expired) {
+					// check if client and database refresh tokens are equal
+					if (refreshToken_client === refreshToken_database) {
+						const decoded = jwt.verify(
+							refreshToken_client,
+							process.env.JWT_REFRESH_SECRET,
+						);
+						const expiration = decoded.exp * 1000; // s -> ms
+						const now = Date.now(); // ms
+						const expired = Date.now() >= expiration;
+
+						// if refresh token is expired, return error
+						if (expired) {
+							return next({
+								status: 401,
+								message: {
+									jwt_refresh:
+										"Refresh token is expired.  Please login again.",
+								},
+								stack: new Error(),
+							});
+						}
+
+						// add auth type and delete sensitive data before logging in
+						user.auth = "jwt refresh";
+						await delete user.password;
+						await delete user.refresh_token;
+
+						// SUCCESS: generate new access token
+						const jwt_access = await accessToken_generate(
+							req,
+							res,
+							next,
+							user,
+						);
+						return res.status(200).json({
+							jwt_refresh: req.cookies.jwt_refresh,
+							jwt_access,
+							message:
+								"User login automatically renewed (access token refreshed).",
+						});
+
+						// if client and database refresh token do NOT match
+					} else {
 						return next({
 							status: 401,
 							message: {
 								jwt_refresh:
-									"Refresh token is expired.  Please login again.",
+									"Client refresh token does NOT match user's refresh token in database.",
 							},
 							stack: new Error(),
 						});
 					}
+				}
 
-					// add auth type and delete sensitive data before logging in
-					user.auth = "jwt refresh";
-					await delete user.password;
-					await delete user.refresh_token;
-
-					// SUCCESS: generate new access token
-					const jwt_access = await accessToken_generate(
-						req,
-						res,
-						next,
-						user,
-					);
-					return res.status(200).json({
-						jwt_refresh: req.cookies.jwt_refresh,
-						jwt_access,
-						message:
-							"User login automatically renewed (access token refreshed).",
-					});
-
-					// if client and database refresh token do NOT match
-				} else {
+				// if jwt invalid (didn't return user), return error
+				if (!user) {
 					return next({
 						status: 401,
-						message: {
-							jwt_refresh:
-								"Client refresh token does NOT match user's refresh token in database.",
-						},
-						stack: new Error(),
+						message: { jwt_refresh: info.message },
+						stack: new Error(info.message),
 					});
 				}
-			}
-
-			// if jwt invalid (didn't return user), return error
-			if (!user) {
-				return next({
-					status: 401,
-					message: { jwt_refresh: info.message },
-					stack: new Error(info.message),
-				});
-			}
-		},
-	)(req, res, next);
+			},
+		)(req, res, next);
+	}, timeoutDuration);
 };
 
 // *************
@@ -248,54 +257,50 @@ export const registerUser = async (req, res, next) => {
 };
 
 // ! deprecated: local login
-export const loginUser_local = async (req, res, next) => {
-	const { errors, isValid } = validateLogin(req.body);
-
-	// if request not valid, return errors
-	if (!isValid) {
-		return next({
-			status: 422,
-			message: errors,
-			stack: new Error(`Check login validator.`),
-		});
-	}
-
-	passport.authenticate("local", (err, user, info) => {
-		if (err) return next(err);
-
-		// if no user
-		if (!user) {
-			// email error returned
-			if (info.type === `email`) {
-				errors.email = info.message;
-				return next({
-					status: 401,
-					message: errors,
-					stack: new Error(errors.email),
-				});
-			}
-			// password error returned
-			if (info.type === `password`) {
-				errors.password = info.message;
-				return next({
-					status: 401,
-					message: errors,
-					stack: new Error(errors.password),
-				});
-			}
-		}
-
-		// add auth type to user before logging in
-		user.auth = "local";
-
-		// if user, login user
-		req.login(user, (err) => {
-			if (err) return next(err);
-
-			console.log(`Success!  Password is correct :D`);
-			return res.status(200).json(user);
-		});
-	})(req, res, next);
+const login_local = {
+	// export const loginUser_local = async (req, res, next) => {
+	// 	const { errors, isValid } = validateLogin(req.body);
+	// 	// if request not valid, return errors
+	// 	if (!isValid) {
+	// 		return next({
+	// 			status: 422,
+	// 			message: errors,
+	// 			stack: new Error(`Check login validator.`),
+	// 		});
+	// 	}
+	// 	passport.authenticate("local", (err, user, info) => {
+	// 		if (err) return next(err);
+	// 		// if no user
+	// 		if (!user) {
+	// 			// email error returned
+	// 			if (info.type === `email`) {
+	// 				errors.email = info.message;
+	// 				return next({
+	// 					status: 401,
+	// 					message: errors,
+	// 					stack: new Error(errors.email),
+	// 				});
+	// 			}
+	// 			// password error returned
+	// 			if (info.type === `password`) {
+	// 				errors.password = info.message;
+	// 				return next({
+	// 					status: 401,
+	// 					message: errors,
+	// 					stack: new Error(errors.password),
+	// 				});
+	// 			}
+	// 		}
+	// 		// add auth type to user before logging in
+	// 		user.auth = "local";
+	// 		// if user, login user
+	// 		req.login(user, (err) => {
+	// 			if (err) return next(err);
+	// 			console.log(`Success!  Password is correct :D`);
+	// 			return res.status(200).json(user);
+	// 		});
+	// 	})(req, res, next);
+	// };
 };
 
 export const loginUser_jwt = async (req, res, next) => {

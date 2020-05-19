@@ -11,7 +11,7 @@ const Navigation = (props) => {
 
 	const onLogoutClick = (event) => {
 		event.preventDefault();
-		logoutUser(history, dispatch);
+		logoutUser(history, state, dispatch);
 	};
 
 	// allows logging out across all open tabs

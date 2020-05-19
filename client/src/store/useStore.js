@@ -3,20 +3,21 @@ import React, { createContext, useContext, useReducer, useEffect } from "react";
 import isEmpty from "lodash/fp/isEmpty";
 import axios from "axios";
 // import action types
-import { actionTypes_books } from "./actions/books";
+import { actionTypes_auth } from "./actions/auth";
 import { actionTypes_users } from "./actions/users";
+import { actionTypes_books } from "./actions/books";
 import { actionTypes_errors } from "./actions/errors";
 
 // reducer
 const reducer = (state, action) => {
 	switch (action.type) {
-		// *** book actions
-		case actionTypes_books.GET_BOOKS_ALL:
-			return { ...state, books_all: action.payload };
-		case actionTypes_books.GET_BOOKS_AVAILABLE:
-			return { ...state, books_available: action.payload };
-		case actionTypes_books.GET_BOOKS_CHECKED_OUT:
-			return { ...state, books_checked_out: action.payload };
+		// *** auth actions
+		case actionTypes_auth.SAVE_ACCESS_TOKEN:
+			return {
+				...state,
+				jwt_access: action.payload.jwt_access,
+				jwt_access_expiry: action.payload.jwt_access_expiry,
+			};
 		// *** user actions
 		case actionTypes_users.GET_USERS:
 			return { ...state, users: action.payload };
@@ -28,6 +29,13 @@ const reducer = (state, action) => {
 				user_current: action.payload,
 				isAuthenticated: !isEmpty(action.payload),
 			};
+		// *** book actions
+		case actionTypes_books.GET_BOOKS_ALL:
+			return { ...state, books_all: action.payload };
+		case actionTypes_books.GET_BOOKS_AVAILABLE:
+			return { ...state, books_available: action.payload };
+		case actionTypes_books.GET_BOOKS_CHECKED_OUT:
+			return { ...state, books_checked_out: action.payload };
 		// *** error actions
 		case actionTypes_errors.LOG_ERRORS:
 			return {
@@ -56,6 +64,8 @@ const initState =
 				user: null,
 				user_current: null,
 				isAuthenticated: false,
+				jwt_access: null,
+				jwt_access_expiry: null,
 				errors: null,
 		  }
 		: {}; // fallback to {} so that sub states don't return null
@@ -65,6 +75,9 @@ const StoreContext = createContext();
 
 // component to wrap upper level root component with Provider
 export const StoreProvider = ({ children }) => {
+	// ? consider localStorage for persisted state
+	// const [state, dispatch] = useReducer(reducer, initState);
+
 	// if persistedState available, load session state (previously saved store)
 	const persistedState = JSON.parse(localStorage.getItem("persistedState"));
 	// choose starting state (based on presence of persistedState)
@@ -85,7 +98,7 @@ export const StoreProvider = ({ children }) => {
 				isAuthenticated: state.isAuthenticated,
 			}),
 		);
-	}, [state]);
+	}, [state.user_current, state.isAuthenticated]);
 
 	return (
 		<StoreContext.Provider value={{ state, dispatch }}>
