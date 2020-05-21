@@ -15,7 +15,7 @@ const CheckedOutBooks = (props) => {
 		if (state.jwt_access && !state.books_checked_out) {
 			getBooks_checkedOut(state, dispatch);
 		}
-	}, [state.jwt_access, !state.books_checked_out]);
+	}, [state.jwt_access, state.books_checked_out]);
 
 	const displayBooks =
 		state.books_checked_out &&

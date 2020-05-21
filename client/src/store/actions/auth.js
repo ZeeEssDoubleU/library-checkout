@@ -73,10 +73,11 @@ export const loginUser_jwt = async (userData, history, state, dispatch) => {
 
 // check if user logged in upon loading or refreshing initial page
 export const accessToken_get = async (history, state, dispatch) => {
-	console.log("Checking if user already logged in...");
+	console.log("Getting access token...");
 
 	// check if jwt_access exists in local storage
-	const tokenInClient = state.jwt_access && state.jwt_access_expiry; // boolean
+	const tokenInClient =
+		state.jwt_access && state.jwt_access_expiry ? true : false; // boolean
 
 	// if token in client, check if expired
 	if (tokenInClient) {
@@ -98,16 +99,11 @@ export const accessToken_get = async (history, state, dispatch) => {
 };
 
 // refresh access token
-export const accessToken_refresh = async (
-	history,
-	state,
-	dispatch,
-	timeoutDuration = 0,
-) => {
+export const accessToken_refresh = async (history, state, dispatch) => {
 	try {
 		const response = await axios.get(
 			"/api/auth/access-token/refresh",
-			setRequestHeaders(state, timeoutDuration),
+			setRequestHeaders(state),
 		);
 
 		const { jwt_access, message } = response.data;
@@ -121,12 +117,22 @@ export const accessToken_refresh = async (
 	}
 };
 
+export const accessToken_refresh_auto = (
+	history,
+	state,
+	dispatch,
+	expiration,
+) => {
+	const now = Date.now(); // ms
+	const duration = expiration - now - 3000; // ms
+
+	setTimeout(() => accessToken_refresh(history, state, dispatch), duration);
+};
+
 export const accessToken_setState = (token, history, state, dispatch) => {
 	// decode token to get user data and set login_user state
 	const decoded = jwt_decode(token);
 	const expiration = decoded.exp * 1000; // s -> ms
-	const now = Date.now(); // ms
-	const duration = expiration - now; // ms
 
 	// store token and expiration in memory
 	dispatch({
@@ -137,8 +143,7 @@ export const accessToken_setState = (token, history, state, dispatch) => {
 		},
 	});
 
-	const timeoutDuration = duration - 3000; // ms
-	accessToken_refresh(history, state, dispatch, timeoutDuration);
+	accessToken_refresh_auto(history, state, dispatch, expiration);
 };
 
 // logout functions
@@ -170,13 +175,6 @@ export const logoutFrontend = async (history, dispatch) => {
 		payload: null,
 	});
 
-	// redirect to login page (wait for all dispatches to finish to ui displays logout correctly)
-	if (history.location.pathname !== "/login") {
-		history.push("/login");
-	}
-
-	// to support logging out from all windows
-	window.localStorage.setItem("logout", Date.now());
 	console.log("User logged out from client (front end).");
 };
 

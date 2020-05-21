@@ -6,6 +6,7 @@ import { createUser, findUser } from "../api/users/controllers";
 // import strategies
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as FacebookStrategy } from "passport-facebook";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as OAuth2Strategy } from "passport-oauth2";
 // import { Strategy as LocalStrategy } from "passport-local"; // ! deprecated: local login
 
@@ -131,7 +132,7 @@ passport.use(
 			clientID: process.env.FACEBOOK_APP_ID,
 			clientSecret: process.env.FACEBOOK_APP_SECRET,
 			callbackURL: process.env.FACEBOOK_APP_CALLBACK,
-			profileFields: ["id", "first_name", "last_name", "email"],
+			profileFields: ["first_name", "last_name", "email"],
 		},
 		async (accessToken, refreshToken, profile, done) => {
 			const { first_name, last_name, email } = profile._json;
@@ -142,6 +143,39 @@ passport.use(
 				// if no user found, create (register) new user in database (without password)
 				if (!user) {
 					user = await createUser({ first_name, last_name, email });
+				}
+
+				return done(null, user);
+			} catch (error) {
+				return done(error, {
+					type: `passport`,
+					message: `Passport - oauth2 facebook: ${error}`,
+				});
+			}
+		},
+	),
+);
+// google oauth2
+passport.use(
+	new GoogleStrategy(
+		{
+			clientID: process.env.GOOGLE_APP_ID,
+			clientSecret: process.env.GOOGLE_APP_SECRET,
+			callbackURL: process.env.GOOGLE_APP_CALLBACK,
+		},
+		async (accessToken, refreshToken, profile, done) => {
+			const { given_name, family_name, email } = profile._json;
+
+			try {
+				let user = await findUser({ email });
+
+				// if no user found, create (register) new user in database (without password)
+				if (!user) {
+					user = await createUser({
+						first_name: given_name,
+						last_name: family_name,
+						email,
+					});
 				}
 
 				return done(null, user);

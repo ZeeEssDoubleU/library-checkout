@@ -23,14 +23,15 @@ function App() {
 	// checks if user already logged into client
 	// if jwt already in memory, check expiration
 	useEffect(() => {
-		if (history.location.pathname !== "/oauth/callback") {
-			if (state.user_current) {
-				accessToken_get(history, state, dispatch);
-			} else {
-				getUser_current(history, state, dispatch);
-			}
+		if (
+			history.location.pathname !== "/oauth/callback" &&
+			!localStorage.logout
+		) {
+			state.user_current
+				? accessToken_get(history, state, dispatch)
+				: getUser_current(history, state, dispatch);
 		}
-	}, [state.user_current, history]);
+	}, [state.user_current, history, localStorage]);
 
 	return (
 		<>
@@ -41,13 +42,13 @@ function App() {
 				<Route exact path="/register" component={Register} />
 				<Route exact path="/books/all" component={AllBooks} />
 				<Route exact path="/books/available" component={AvailableBooks} />
-				<Route
+				<PrivateRoute
 					exact
 					path="/books/checked-out"
 					component={CheckedOutBooks}
 				/>
 				<Route exact path="/users" component={Users} />
-				{/* for facebook authorization */}
+				{/* for social authorization */}
 				<Route exact path="/oauth/callback" component={OAuthCallback} />
 			</Switch>
 		</>

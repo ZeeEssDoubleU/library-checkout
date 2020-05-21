@@ -5,6 +5,7 @@ import {
 	// loginUser_local, // ! deprecated: local login
 	loginUser_jwt,
 	loginUser_facebook_callback,
+	loginUser_google_callback,
 	logoutUser,
 	refreshToken_generate,
 	accessToken_generate,
@@ -36,12 +37,25 @@ router.get(
 	loginUser_facebook_callback,
 );
 
+router.get(
+	"/login/google",
+	passport.authenticate("google", {
+		scope: ["profile", "email"],
+	}),
+);
+router.get(
+	"/login/google/callback",
+	passport.authenticate("google", {
+		session: false,
+		failureRedirect: "http://localhost:3000/login",
+	}),
+	loginUser_google_callback,
+);
+
 // @route - GET api/auth/token_type/generate_or_refresh
 // @desc - refresh access token
 // @access - public
 router.get("/access-token/refresh", accessToken_refresh);
-// router.get("/refresh-token/generate", refreshToken_generate);
-// router.get("/access-token/generate", accessToken_generate);
 
 // @route - GET api/auth/logout
 // @desc - get all users

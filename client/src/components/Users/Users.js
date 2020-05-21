@@ -11,8 +11,10 @@ const Users = (props) => {
 	const { state, dispatch } = useStore();
 
 	useEffect(() => {
-		getUsers(state, dispatch);
-	}, []);
+		if (!state.users) {
+			getUsers(state, dispatch);
+		}
+	}, [state.users]);
 
 	const dislayUsers =
 		state.users &&

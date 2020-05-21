@@ -11,8 +11,10 @@ const AllBooks = (props) => {
 	const { state, dispatch } = useStore();
 
 	useEffect(() => {
-		getBooks_available(state, dispatch);
-	}, []);
+		if (!state.books_available) {
+			getBooks_available(state, dispatch);
+		}
+	}, [state.books_available]);
 
 	const displayBooks =
 		state.books_available &&

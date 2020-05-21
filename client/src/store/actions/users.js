@@ -28,25 +28,29 @@ export const getUsers = async (state, dispatch) => {
 
 export const getUser_current = async (history, state, dispatch) => {
 	try {
+		console.log("Checking if user is logged in...");
+
 		const response = await axios.get(
 			"/api/users/current",
 			setRequestHeaders(state),
 		);
 		const { jwt_refresh, jwt_access } = response.data;
-		console.log("REFRESH", jwt_refresh);
-		console.log("ACCESS", jwt_access);
 
 		await accessToken_setState(jwt_access, history, state, dispatch);
 		currentUser_setState(jwt_refresh, dispatch);
 
 		// TODO: consider redirecting
 		// history.push("/books/checked-out");
+
+		// if available, remove logout flag from local storage
+		if (localStorage.logout) {
+			localStorage.removeItem("logout");
+		}
 	} catch (error) {
 		logErrors({ current_user: error.response.data.message }, dispatch);
 
-		// logout user and redirect to login
+		// logout user
 		logoutUser(history, state, dispatch);
-		history.push("/login");
 	}
 };
 

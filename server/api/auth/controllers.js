@@ -59,7 +59,7 @@ export const checkLoggedIn = (req, res, next) => {
 export const refreshToken_generate = async (req, res, next, user) => {
 	try {
 		// const expiresIn = 30 * 24 * 60 * 60; // 30 days (calculated in s)
-		const expiresIn = 5 * 60; // ? DEBUG: 1 min (calculated in s)
+		const expiresIn = 10 * 60; // ? DEBUG: mins (calculated in s)
 
 		// create jwt
 		const token = await jwt.sign(user, process.env.JWT_REFRESH_SECRET, {
@@ -89,7 +89,7 @@ export const refreshToken_generate = async (req, res, next, user) => {
 export const accessToken_generate = async (req, res, next, user) => {
 	try {
 		// const expiresIn = 10 * 60; // 10 mins (calculated in s)
-		const expiresIn = 15; // ? DEBUG: 15 sec (calculated in s)
+		const expiresIn = 15; // ? DEBUG: seconds
 
 		// create jwt
 		const token = await jwt.sign(user, process.env.JWT_ACCESS_SECRET, {
@@ -116,87 +116,81 @@ export const accessToken_generate = async (req, res, next, user) => {
 // think i need to set timeout using local storage, instead of backend
 // this is because delaying on back end still allows the refresh token to be active, returning a new access token even after logging out
 export const accessToken_refresh = async (req, res, next) => {
-	// takes duration from front end (should be prescribed duration less than token expiration, default = 0)
-	const timeoutDuration = req.headers.timeoutduration || 0;
+	passport.authenticate(
+		"jwt_refresh",
+		{ session: false },
+		async (err, user, info) => {
+			if (err) return next(err);
 
-	setTimeout(() => {
-		// else, check if jwt_refresh available and valid
-		passport.authenticate(
-			"jwt_refresh",
-			{ session: false },
-			async (err, user, info) => {
-				if (err) return next(err);
+			// if user returned from jwt_refresh auth
+			if (user) {
+				const refreshToken_client = req.cookies.jwt_refresh;
+				const refreshToken_database = user.refresh_token;
 
-				// if user returned from jwt_refresh auth
-				if (user) {
-					const refreshToken_client = req.cookies.jwt_refresh;
-					const refreshToken_database = user.refresh_token;
+				// check if client and database refresh tokens are equal
+				if (refreshToken_client === refreshToken_database) {
+					const decoded = jwt.verify(
+						refreshToken_client,
+						process.env.JWT_REFRESH_SECRET,
+					);
+					const expiration = decoded.exp * 1000; // s -> ms
+					const now = Date.now(); // ms
+					const expired = Date.now() >= expiration;
 
-					// check if client and database refresh tokens are equal
-					if (refreshToken_client === refreshToken_database) {
-						const decoded = jwt.verify(
-							refreshToken_client,
-							process.env.JWT_REFRESH_SECRET,
-						);
-						const expiration = decoded.exp * 1000; // s -> ms
-						const now = Date.now(); // ms
-						const expired = Date.now() >= expiration;
-
-						// if refresh token is expired, return error
-						if (expired) {
-							return next({
-								status: 401,
-								message: {
-									jwt_refresh:
-										"Refresh token is expired.  Please login again.",
-								},
-								stack: new Error(),
-							});
-						}
-
-						// add auth type and delete sensitive data before logging in
-						user.auth = "jwt refresh";
-						await delete user.password;
-						await delete user.refresh_token;
-
-						// SUCCESS: generate new access token
-						const jwt_access = await accessToken_generate(
-							req,
-							res,
-							next,
-							user,
-						);
-						return res.status(200).json({
-							jwt_refresh: req.cookies.jwt_refresh,
-							jwt_access,
-							message:
-								"User login automatically renewed (access token refreshed).",
-						});
-
-						// if client and database refresh token do NOT match
-					} else {
+					// if refresh token is expired, return error
+					if (expired) {
 						return next({
 							status: 401,
 							message: {
 								jwt_refresh:
-									"Client refresh token does NOT match user's refresh token in database.",
+									"Refresh token is expired.  Please login again.",
 							},
 							stack: new Error(),
 						});
 					}
-				}
 
-				// if jwt invalid (didn't return user), return error
-				if (!user) {
+					// add auth type and delete sensitive data before logging in
+					user.auth = "jwt refresh";
+					await delete user.password;
+					await delete user.refresh_token;
+
+					// SUCCESS: generate new access token
+					const jwt_access = await accessToken_generate(
+						req,
+						res,
+						next,
+						user,
+					);
+					return res.status(200).json({
+						jwt_refresh: req.cookies.jwt_refresh,
+						jwt_access,
+						message:
+							"User login automatically renewed (access token refreshed).",
+					});
+
+					// if client and database refresh token do NOT match
+				} else {
 					return next({
 						status: 401,
-						message: { jwt_refresh: info.message },
-						stack: new Error(info.message),
+						message: {
+							jwt_refresh:
+								"Client refresh token does NOT match user's refresh token in database.",
+						},
+						stack: new Error(),
 					});
 				}
-			},
-		)(req, res, next);
-	}, timeoutDuration);
+			}
+
+			// if jwt invalid (didn't return user), return error
+			if (!user) {
+				return next({
+					status: 401,
+					message: { jwt_refresh: info.message },
+					stack: new Error(info.message),
+				});
+			}
+		},
+	)(req, res, next);
 };
 
 // *************
@@ -388,7 +382,23 @@ export const loginUser_facebook_callback = async (req, res, next) => {
 	const user = req.user;
 
 	// add auth type and delete sensitive data before logging in
-	user.auth = "facebook";
+	user.auth = "oauth - facebook";
+	await delete user.password;
+	await delete user.refresh_token;
+
+	// generate tokens
+	await refreshToken_generate(req, res, next, user);
+	await accessToken_generate(req, res, next, user);
+
+	res.redirect("http://localhost:3000/oauth/callback");
+};
+export const loginUser_google_callback = async (req, res, next) => {
+	// profile fields returned from passport google strategy
+	// password has been removed in deserialize
+	const user = req.user;
+
+	// add auth type and delete sensitive data before logging in
+	user.auth = "oauth - google";
 	await delete user.password;
 	await delete user.refresh_token;
 
